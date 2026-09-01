@@ -138,7 +138,6 @@ export function LoginForm() {
         {pending ? "Signing in…" : "Log in"}
       </Button>
 
-      <DemoAccounts />
     </form>
   );
 }
@@ -275,26 +274,3 @@ export function RegisterForm() {
   );
 }
 
-/** Seeded logins, so the panels can be opened without hunting for credentials. */
-function DemoAccounts() {
-  const accounts = [
-    { role: "Admin", email: "admin@bookmyrooms.com.bd" },
-    { role: "Vendor", email: "vendor.seapearl@bookmyrooms.com.bd" },
-    { role: "Customer", email: "nusrat@example.com" },
-  ];
-  return (
-    <div className="rounded-lg border border-dashed bg-secondary/30 p-3">
-      <p className="text-xs font-semibold">Demo accounts</p>
-      <ul className="mt-1.5 space-y-0.5">
-        {accounts.map((a) => (
-          <li key={a.email} className="text-xs text-muted-foreground">
-            <span className="font-medium text-foreground">{a.role}</span> · {a.email}
-          </li>
-        ))}
-      </ul>
-      <p className="mt-1.5 text-xs text-muted-foreground">
-        Password for all three: <code className="font-mono">Password@123</code>
-      </p>
-    </div>
-  );
-}
