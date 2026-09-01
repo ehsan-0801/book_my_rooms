@@ -1,5 +1,5 @@
+import Image from "next/image";
 import { ShieldCheck, Sparkles, Zap } from "lucide-react";
-import { HeroMedia } from "./hero-media";
 import { SearchBar } from "@/components/search/search-bar";
 
 const TRUST = [
@@ -11,20 +11,19 @@ const TRUST = [
 export function Hero() {
   return (
     <section className="relative isolate overflow-hidden">
-      <HeroMedia poster="/images/hero-poster.jpg" />
-
-      {/*
-        Two crossed gradients rather than one flat scrim: the horizontal pass
-        protects the left-aligned copy, the vertical pass seats the search card,
-        and the open water on the right stays bright.
-      */}
-      <div
-        aria-hidden
-        className="absolute inset-0 -z-10 bg-gradient-to-r from-black/80 via-black/45 to-black/10"
+      <Image
+        src="/images/hero.jpg"
+        alt=""
+        fill
+        priority
+        sizes="100vw"
+        className="-z-10 object-cover"
       />
+      {/* Two-stop scrim: dark enough for AA text at the top, lighter at the
+          base so the search card doesn't sit on a muddy band. */}
       <div
         aria-hidden
-        className="absolute inset-0 -z-10 bg-gradient-to-b from-black/45 via-transparent to-black/35"
+        className="absolute inset-0 -z-10 bg-gradient-to-b from-black/70 via-black/45 to-black/25"
       />
 
       <div className="mx-auto w-full max-w-7xl px-4 pt-14 pb-10 sm:px-6 sm:pt-20 lg:px-8 lg:pt-28 lg:pb-16">

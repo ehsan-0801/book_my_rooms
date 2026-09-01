@@ -142,6 +142,4 @@ locks Prisma Migrate needs.
 Destination photography from **Wikimedia Commons** under CC BY / CC BY-SA;
 attribution travels with each record in `src/lib/destinations.ts` and renders on
 every destination page, as those licences require. Property and room
-photography from **Unsplash**. The hero background video is from **Pexels**
-(`videos/hero-720.mp4`, `hero-540.mp4`), with its own first frame as the poster
-so the still and the video are the same shot.
+photography from **Unsplash**.
