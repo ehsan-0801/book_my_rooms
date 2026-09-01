@@ -1,0 +1,718 @@
+// Book My Rooms — Multi-vendor hotel, resort & travel booking marketplace
+// Database: PostgreSQL   |   Modelled against the SRS (Book My Rooms.md)
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================ enums
+
+enum UserRole {
+  CUSTOMER
+  VENDOR
+  ADMIN
+}
+
+enum VendorStatus {
+  PENDING
+  APPROVED
+  SUSPENDED
+  REJECTED
+}
+
+enum PropertyCategory {
+  LUXURY
+  STANDARD
+  BUDGET
+}
+
+enum PropertyStatus {
+  DRAFT
+  PENDING_REVIEW
+  PUBLISHED
+  UNPUBLISHED
+  REJECTED
+}
+
+// SRS §20 — booking lifecycle
+enum BookingStatus {
+  PENDING
+  PAYMENT_PENDING
+  CONFIRMED
+  CANCELLED
+  REJECTED
+  COMPLETED
+  FAILED
+  REFUND_PENDING
+  REFUNDED
+}
+
+// SRS §82 — financial state is tracked separately from booking state
+enum PaymentStatus {
+  UNPAID
+  PROCESSING
+  PAID
+  PARTIALLY_REFUNDED
+  REFUNDED
+  FAILED
+}
+
+enum PaymentMethod {
+  EPS
+  BKASH
+  NAGAD
+  CARD
+  BANK_TRANSFER
+  PAY_AT_HOTEL
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FLAT
+}
+
+// SRS §83 — commission lifecycle
+enum CommissionStatus {
+  PENDING
+  EARNED
+  REVERSED
+  SETTLED
+}
+
+enum RefundStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  PROCESSING
+  COMPLETED
+}
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+}
+
+enum NotificationChannel {
+  EMAIL
+  SMS
+  WHATSAPP
+  IN_APP
+}
+
+// ============================================================ identity
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  phone         String?   @unique
+  passwordHash  String?
+  avatarUrl     String?
+  role          UserRole  @default(CUSTOMER)
+  emailVerified DateTime?
+  phoneVerified DateTime?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  vendor        Vendor?
+  bookings      Booking[]
+  reviews       Review[]
+  wishlist      WishlistItem[]
+  notifications Notification[]
+  auditLogs     AuditLog[]
+  accounts      Account[]
+  sessions      Session[]
+
+  @@index([role])
+}
+
+// ---------------------------------------------------------------- Auth.js
+// Adapter tables. Sessions use the JWT strategy (required by the credentials
+// provider), so `Session` stays empty in practice — it's here so OAuth
+// providers can be added later without another migration.
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Vendor {
+  id              String       @id @default(cuid())
+  userId          String       @unique
+  businessName    String
+  slug            String       @unique
+  contactEmail    String
+  contactPhone    String
+  address         String?
+  tradeLicenseNo  String?
+  tinNumber       String?
+  bankAccountName String?
+  bankAccountNo   String?
+  bankName        String?
+  status          VendorStatus @default(PENDING)
+  // Platform cut; a null value falls back to the global commission setting.
+  commissionRate  Decimal?     @db.Decimal(5, 2)
+  logoUrl         String?
+  approvedAt      DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  properties Property[]
+  payouts    Payout[]
+
+  @@index([status])
+}
+
+// ============================================================ geography (SRS §8)
+
+model Division {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  slug      String     @unique
+  isActive  Boolean    @default(true)
+  districts District[]
+}
+
+model District {
+  id         String  @id @default(cuid())
+  divisionId String
+  name       String
+  slug       String  @unique
+  imageUrl   String?
+  tagline    String?
+  latitude   Float?
+  longitude  Float?
+  isPopular  Boolean @default(false)
+  isActive   Boolean @default(true)
+
+  division   Division   @relation(fields: [divisionId], references: [id])
+  areas      Area[]
+  properties Property[]
+
+  @@unique([divisionId, name])
+  @@index([isPopular, isActive])
+}
+
+model Area {
+  id         String  @id @default(cuid())
+  districtId String
+  name       String
+  slug       String
+  isActive   Boolean @default(true)
+
+  district   District   @relation(fields: [districtId], references: [id])
+  properties Property[]
+
+  @@unique([districtId, slug])
+}
+
+// ============================================================ inventory
+
+// SRS §7.1 — a table, not an enum, so admins can add types.
+model PropertyType {
+  id        String  @id @default(cuid())
+  name      String  @unique
+  slug      String  @unique
+  icon      String?
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
+
+  properties Property[]
+}
+
+model Amenity {
+  id       String  @id @default(cuid())
+  name     String  @unique
+  slug     String  @unique
+  icon     String?
+  category String? // "general" | "room" | "bathroom" | "food" | "outdoor"
+  isFilter Boolean @default(false) // surfaced in search filters (SRS §9.5)
+
+  properties PropertyAmenity[]
+  rooms      RoomAmenity[]
+}
+
+model Property {
+  id                String           @id @default(cuid())
+  vendorId          String
+  typeId            String
+  districtId        String
+  areaId            String?
+  name              String
+  slug              String           @unique
+  category          PropertyCategory @default(STANDARD)
+  shortDescription  String?
+  description       String           @db.Text
+  addressLine       String
+  latitude          Float?
+  longitude         Float?
+  contactPhone      String?
+  contactEmail      String?
+  website           String?
+  starRating        Int?
+  checkInTime       String           @default("14:00")
+  checkOutTime      String           @default("12:00")
+  policies          String?          @db.Text
+  rules             String?          @db.Text
+  cancellationPolicy String?         @db.Text
+  status            PropertyStatus   @default(DRAFT)
+  isFeatured        Boolean          @default(false)
+  isPremium         Boolean          @default(false)
+  featuredUntil     DateTime?
+  rejectionReason   String?
+
+  // Denormalised for listing/sort performance (SRS §63); recomputed on write.
+  ratingAvg   Decimal @default(0) @db.Decimal(3, 2)
+  ratingCount Int     @default(0)
+  bookingCount Int    @default(0)
+  basePrice   Decimal @db.Decimal(10, 2) // cheapest room — powers price filter/sort
+
+  // SEO (SRS §57)
+  metaTitle       String?
+  metaDescription String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  vendor     Vendor             @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  type       PropertyType       @relation(fields: [typeId], references: [id])
+  district   District           @relation(fields: [districtId], references: [id])
+  area       Area?              @relation(fields: [areaId], references: [id])
+  rooms      Room[]
+  images     PropertyImage[]
+  amenities  PropertyAmenity[]
+  attractions NearbyAttraction[]
+  reviews    Review[]
+  bookings   Booking[]
+  wishlist   WishlistItem[]
+
+  @@index([districtId, status])
+  @@index([status, isFeatured])
+  @@index([status, category])
+  @@index([basePrice])
+  @@index([ratingAvg])
+}
+
+model PropertyImage {
+  id         String  @id @default(cuid())
+  propertyId String
+  url        String
+  alt        String?
+  sortOrder  Int     @default(0)
+  isCover    Boolean @default(false)
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId, sortOrder])
+}
+
+model PropertyAmenity {
+  propertyId String
+  amenityId  String
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  amenity  Amenity  @relation(fields: [amenityId], references: [id], onDelete: Cascade)
+
+  @@id([propertyId, amenityId])
+}
+
+// SRS §13.6
+model NearbyAttraction {
+  id         String  @id @default(cuid())
+  propertyId String
+  name       String
+  category   String? // beach | waterfall | mountain | restaurant | shopping
+  distanceKm Decimal? @db.Decimal(5, 2)
+  imageUrl   String?
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId])
+}
+
+model Room {
+  id                String   @id @default(cuid())
+  propertyId        String
+  name              String
+  slug              String
+  description       String?  @db.Text
+  maxGuests         Int      @default(2)
+  maxAdults         Int      @default(2)
+  maxChildren       Int      @default(0)
+  bedType           String?
+  sizeSqft          Int?
+  totalUnits        Int      @default(1)
+  basePrice         Decimal  @db.Decimal(10, 2) // per night, BDT
+  discountType      DiscountType?
+  discountValue     Decimal? @db.Decimal(10, 2)
+  isRefundable      Boolean  @default(true)
+  breakfastIncluded Boolean  @default(false)
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  property     Property           @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  images       RoomImage[]
+  amenities    RoomAmenity[]
+  availability RoomAvailability[]
+  bookingItems BookingItem[]
+
+  @@unique([propertyId, slug])
+  @@index([propertyId])
+}
+
+model RoomImage {
+  id        String  @id @default(cuid())
+  roomId    String
+  url       String
+  alt       String?
+  sortOrder Int     @default(0)
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, sortOrder])
+}
+
+model RoomAmenity {
+  roomId    String
+  amenityId String
+
+  room    Room    @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  amenity Amenity @relation(fields: [amenityId], references: [id], onDelete: Cascade)
+
+  @@id([roomId, amenityId])
+}
+
+// SRS §15/§16/§21 — one row per room per night. Source of truth for
+// real-time availability and the lock point for double-booking prevention.
+model RoomAvailability {
+  id        String   @id @default(cuid())
+  roomId    String
+  date      DateTime @db.Date
+  unitsOpen Int      // remaining bookable units that night
+  unitsHeld Int      @default(0) // held by in-flight (unpaid) bookings
+  price     Decimal? @db.Decimal(10, 2) // nightly override (SRS §17 dynamic pricing)
+  isClosed  Boolean  @default(false)    // vendor stop-sell
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, date])
+  @@index([date])
+}
+
+// ============================================================ booking
+
+model Booking {
+  id             String   @id @default(cuid())
+  reference      String   @unique // BMR-XXXXXXXX shown to the guest
+  userId         String?
+  propertyId     String
+  checkIn        DateTime @db.Date
+  checkOut       DateTime @db.Date
+  nights         Int
+  adults         Int      @default(1)
+  children       Int      @default(0)
+  roomCount      Int      @default(1)
+  guestName      String
+  guestEmail     String
+  guestPhone     String
+  specialRequest String?  @db.Text
+
+  subtotal      Decimal @db.Decimal(10, 2)
+  discountTotal Decimal @default(0) @db.Decimal(10, 2)
+  taxTotal      Decimal @default(0) @db.Decimal(10, 2)
+  grandTotal    Decimal @db.Decimal(10, 2)
+
+  status        BookingStatus @default(PENDING)
+  paymentStatus PaymentStatus @default(UNPAID)
+  couponId      String?
+  cancelledAt   DateTime?
+  cancelReason  String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  user       User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  property   Property      @relation(fields: [propertyId], references: [id])
+  coupon     Coupon?       @relation(fields: [couponId], references: [id])
+  items      BookingItem[]
+  payments   Payment[]
+  invoice    Invoice?
+  commission Commission?
+  refunds    Refund[]
+  review     Review?
+
+  @@index([userId, createdAt])
+  @@index([propertyId, checkIn])
+  @@index([status])
+  @@index([reference])
+}
+
+model BookingItem {
+  id        String  @id @default(cuid())
+  bookingId String
+  roomId    String
+  roomName  String  // snapshot — survives a later rename/delete of the room
+  units     Int     @default(1)
+  nights    Int
+  unitPrice Decimal @db.Decimal(10, 2) // avg nightly price at time of booking
+  lineTotal Decimal @db.Decimal(10, 2)
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  room    Room    @relation(fields: [roomId], references: [id])
+
+  @@index([bookingId])
+}
+
+model Payment {
+  id             String        @id @default(cuid())
+  bookingId      String
+  method         PaymentMethod @default(EPS)
+  amount         Decimal       @db.Decimal(10, 2)
+  status         PaymentStatus @default(PROCESSING)
+  gatewayRef     String? // EPS transaction id
+  gatewayPayload Json?
+  paidAt         DateTime?
+  failureReason  String?
+  createdAt      DateTime      @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
+  @@index([gatewayRef])
+}
+
+// SRS §25
+model Invoice {
+  id            String   @id @default(cuid())
+  bookingId     String   @unique
+  invoiceNumber String   @unique
+  issuedAt      DateTime @default(now())
+  pdfUrl        String?
+  // Frozen copy of the billed amounts — invoices must not change if a
+  // property later edits its pricing.
+  subtotal      Decimal  @db.Decimal(10, 2)
+  discountTotal Decimal  @db.Decimal(10, 2)
+  taxTotal      Decimal  @db.Decimal(10, 2)
+  grandTotal    Decimal  @db.Decimal(10, 2)
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+}
+
+// SRS §48/§83 — commission is its own ledger entry, not a booking column.
+model Commission {
+  id          String           @id @default(cuid())
+  bookingId   String           @unique
+  vendorId    String
+  rate        Decimal          @db.Decimal(5, 2) // rate applied at booking time
+  baseAmount  Decimal          @db.Decimal(10, 2)
+  amount      Decimal          @db.Decimal(10, 2) // platform earnings
+  vendorPayout Decimal         @db.Decimal(10, 2)
+  status      CommissionStatus @default(PENDING)
+  payoutId    String?
+  earnedAt    DateTime?
+  reversedAt  DateTime?
+  createdAt   DateTime         @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  payout  Payout? @relation(fields: [payoutId], references: [id])
+
+  @@index([vendorId, status])
+}
+
+// SRS §26/§28
+model Refund {
+  id            String       @id @default(cuid())
+  bookingId     String
+  amount        Decimal      @db.Decimal(10, 2)
+  reason        String?      @db.Text
+  status        RefundStatus @default(REQUESTED)
+  gatewayRef    String?
+  requestedAt   DateTime     @default(now())
+  processedAt   DateTime?
+  adminNote     String?
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId, status])
+}
+
+model Payout {
+  id          String       @id @default(cuid())
+  vendorId    String
+  periodStart DateTime     @db.Date
+  periodEnd   DateTime     @db.Date
+  grossAmount Decimal      @db.Decimal(12, 2)
+  commission  Decimal      @db.Decimal(12, 2)
+  netAmount   Decimal      @db.Decimal(12, 2)
+  status      PayoutStatus @default(PENDING)
+  reference   String?
+  paidAt      DateTime?
+  createdAt   DateTime     @default(now())
+
+  vendor      Vendor       @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  commissions Commission[]
+
+  @@index([vendorId, status])
+}
+
+// ============================================================ growth & content
+
+model Coupon {
+  id          String       @id @default(cuid())
+  code        String       @unique
+  description String?
+  type        DiscountType @default(PERCENTAGE)
+  value       Decimal      @db.Decimal(10, 2)
+  maxDiscount Decimal?     @db.Decimal(10, 2)
+  minSpend    Decimal?     @db.Decimal(10, 2)
+  usageLimit  Int?
+  usageCount  Int          @default(0)
+  startsAt    DateTime
+  endsAt      DateTime
+  isActive    Boolean      @default(true)
+
+  bookings Booking[]
+
+  @@index([isActive, endsAt])
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  bookingId  String   @unique // only a completed stay can be reviewed
+  propertyId String
+  userId     String
+  rating     Int // 1-5
+  title      String?
+  comment    String?  @db.Text
+  isApproved Boolean  @default(false)
+  vendorReply String? @db.Text
+  createdAt  DateTime @default(now())
+
+  booking  Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId, isApproved])
+}
+
+model WishlistItem {
+  id         String   @id @default(cuid())
+  userId     String
+  propertyId String
+  createdAt  DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, propertyId])
+}
+
+// SRS §51 — homepage banners and paid placements
+model Banner {
+  id        String   @id @default(cuid())
+  title     String
+  imageUrl  String
+  linkUrl   String?
+  position  String   @default("home_hero") // home_hero | home_mid | search_side
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  startsAt  DateTime?
+  endsAt    DateTime?
+  clicks    Int      @default(0)
+  impressions Int    @default(0)
+}
+
+model Notification {
+  id        String              @id @default(cuid())
+  userId    String?
+  channel   NotificationChannel @default(IN_APP)
+  title     String
+  body      String              @db.Text
+  readAt    DateTime?
+  sentAt    DateTime?
+  createdAt DateTime            @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+}
+
+model NewsletterSubscriber {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  isSubscribed Boolean  @default(true)
+  createdAt    DateTime @default(now())
+}
+
+// SRS §59
+model ContentPage {
+  id              String   @id @default(cuid())
+  slug            String   @unique
+  title           String
+  body            String   @db.Text
+  metaTitle       String?
+  metaDescription String?
+  isPublished     Boolean  @default(false)
+  updatedAt       DateTime @updatedAt
+}
+
+// SRS §66
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String   // "booking.cancel", "vendor.approve", ...
+  entityType String
+  entityId   String
+  before     Json?
+  after      Json?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@index([userId, createdAt])
+}
