@@ -33,10 +33,13 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-50 border-b bg-background/85 backdrop-blur-md supports-[backdrop-filter]:bg-background/70">
-      <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-3 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-3 px-4 sm:px-6 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:gap-6 lg:px-8">
         <Logo />
 
-        <nav aria-label="Main" className="ml-6 hidden items-center gap-1 lg:flex">
+        <nav
+          aria-label="Main"
+          className="hidden items-center gap-1 lg:flex lg:justify-self-center"
+        >
           {NAV.map((item) => (
             <Link
               key={item.href}
@@ -53,7 +56,7 @@ export function SiteHeader() {
           ))}
         </nav>
 
-        <div className="ml-auto flex items-center gap-1 sm:gap-2">
+        <div className="ml-auto flex items-center gap-1 sm:gap-2 lg:ml-0 lg:justify-self-end">
           <Button
             asChild
             variant="ghost"

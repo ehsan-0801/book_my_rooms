@@ -212,3 +212,31 @@
     scrollbar-width: none;
   }
 }
+
+@layer utilities {
+  /*
+    Ken Burns drift for the hero slideshow. A keyframe animation rather than a
+    transition, because the first slide is already active on mount — a
+    transition has no "from" value to move away from and would simply paint
+    pre-zoomed.
+  */
+  @keyframes hero-drift {
+    from {
+      scale: 1;
+    }
+    to {
+      scale: 1.1;
+    }
+  }
+
+  .animate-hero-drift {
+    animation: hero-drift 11s ease-out forwards;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-hero-drift {
+      animation: none;
+      scale: 1;
+    }
+  }
+}

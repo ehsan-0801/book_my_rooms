@@ -1,5 +1,5 @@
-import Image from "next/image";
 import { ShieldCheck, Sparkles, Zap } from "lucide-react";
+import { HeroSlider, type HeroSlide } from "./hero-slider";
 import { SearchBar } from "@/components/search/search-bar";
 
 const TRUST = [
@@ -8,22 +8,61 @@ const TRUST = [
   { Icon: Sparkles, label: "Verified properties" },
 ];
 
+/**
+ * Real destinations from the catalogue rather than stock scenery, so the hero
+ * shows places a visitor can actually book. Ordered to move around the
+ * country: coast, beach, tea country, island, hills.
+ */
+const SLIDES: HeroSlide[] = [
+  {
+    src: "/images/hero.jpg",
+    label: "Beachfront resorts",
+    region: "Across Bangladesh",
+    alt: "Aerial view of a resort pool overlooking the sea",
+  },
+  {
+    src: "/images/destinations/coxs-bazar.jpg",
+    label: "Cox's Bazar",
+    region: "Chattogram Division",
+    alt: "Sunset over the sea beach at Cox's Bazar",
+  },
+  {
+    src: "/images/destinations/sylhet.jpg",
+    label: "Sylhet",
+    region: "Sylhet Division",
+    alt: "Rolling tea gardens in Sylhet",
+  },
+  {
+    src: "/images/destinations/saint-martin.jpg",
+    label: "Saint Martin's Island",
+    region: "Chattogram Division",
+    alt: "Fishing boat on the shore of Saint Martin's Island",
+  },
+  {
+    src: "/images/destinations/bandarban.jpg",
+    label: "Bandarban",
+    region: "Chattogram Hill Tracts",
+    alt: "Layered hills stretching to the horizon in Bandarban",
+  },
+];
+
 export function Hero() {
   return (
     <section className="relative isolate overflow-hidden">
-      <Image
-        src="/images/hero.jpg"
-        alt=""
-        fill
-        priority
-        sizes="100vw"
-        className="-z-10 object-cover"
-      />
-      {/* Two-stop scrim: dark enough for AA text at the top, lighter at the
-          base so the search card doesn't sit on a muddy band. */}
+      <HeroSlider slides={SLIDES} />
+
+      {/*
+        Two crossed gradients rather than one flat scrim: the horizontal pass
+        protects the left-aligned copy across every slide, the vertical pass
+        seats the search card, and the open sky on the right stays bright.
+      */}
       <div
         aria-hidden
-        className="absolute inset-0 -z-10 bg-gradient-to-b from-black/70 via-black/45 to-black/25"
+        className="absolute inset-0 -z-10 bg-gradient-to-r from-black/80 via-black/50 to-black/20"
+      />
+      <div
+        aria-hidden
+        className="absolute inset-0 -z-10 bg-gradient-to-b from-black/40 via-transparent to-black/30"
       />
 
       <div className="mx-auto w-full max-w-7xl px-4 pt-14 pb-10 sm:px-6 sm:pt-20 lg:px-8 lg:pt-28 lg:pb-16">
