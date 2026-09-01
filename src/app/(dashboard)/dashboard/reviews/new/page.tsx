@@ -11,6 +11,7 @@ import {
 } from "@/components/dashboard/form";
 import { EmptyState } from "@/components/dashboard/ui";
 import { Button } from "@/components/ui/button";
+import { ActionForm } from "@/components/dashboard/action-form";
 import { requireUser } from "@/lib/auth-guards";
 import { createReview } from "@/lib/actions/review";
 import { formatDateLong } from "@/lib/format";
@@ -53,7 +54,7 @@ export default async function NewReviewPage() {
       backHref="/dashboard/reviews"
       backLabel="Back to reviews"
     >
-      <form action={createReview} className="space-y-6">
+      <ActionForm action={createReview} className="space-y-6">
         <FormSection title="Your stay">
           <SelectField
             label="Which stay?"
@@ -95,7 +96,7 @@ export default async function NewReviewPage() {
           />
         </FormSection>
         <FormActions submitLabel="Submit review" cancelHref="/dashboard/reviews" />
-      </form>
+      </ActionForm>
     </FormShell>
   );
 }

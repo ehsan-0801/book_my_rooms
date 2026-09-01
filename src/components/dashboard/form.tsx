@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/dashboard/action-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -239,7 +240,7 @@ export function FormActions({
       <Button asChild variant="outline">
         <Link href={cancelHref}>Cancel</Link>
       </Button>
-      <Button type="submit">{submitLabel}</Button>
+      <SubmitButton>{submitLabel}</SubmitButton>
     </div>
   );
 }

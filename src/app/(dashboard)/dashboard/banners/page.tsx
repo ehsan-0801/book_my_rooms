@@ -8,6 +8,7 @@ import { DeleteDialog } from "@/components/dashboard/delete-dialog";
 import { EmptyState, PageHeader } from "@/components/dashboard/ui";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ActionForm, SubmitButton } from "@/components/dashboard/action-form";
 import { requireAdmin } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { toggleBanner } from "@/lib/actions/admin";
@@ -90,12 +91,12 @@ export default async function BannersPage() {
       mobile: "footer",
       cell: (b) => (
         <div className="flex flex-wrap justify-end gap-1 md:flex-nowrap">
-          <form action={toggleBanner}>
+          <ActionForm action={toggleBanner}>
             <input type="hidden" name="id" value={b.id} />
-            <Button type="submit" size="sm" variant="ghost">
+            <SubmitButton size="sm" variant="ghost">
               {b.isActive ? "Pause" : "Activate"}
-            </Button>
-          </form>
+            </SubmitButton>
+          </ActionForm>
           <Button asChild size="sm" variant="outline">
             <Link href={`/dashboard/banners/${b.id}/edit`}>
               <Pencil className="size-3.5" aria-hidden />

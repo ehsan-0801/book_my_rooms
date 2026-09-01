@@ -12,6 +12,7 @@ import {
 import { requireUser } from "@/lib/auth-guards";
 import { updateReview } from "@/lib/actions/review";
 import { prisma } from "@/lib/prisma";
+import { ActionForm } from "@/components/dashboard/action-form";
 
 export const metadata: Metadata = { title: "Edit review", robots: { index: false } };
 
@@ -37,7 +38,7 @@ export default async function EditReviewPage({
       backHref="/dashboard/reviews"
       backLabel="Back to reviews"
     >
-      <form action={updateReview} className="space-y-6">
+      <ActionForm action={updateReview} className="space-y-6">
         <input type="hidden" name="id" value={review.id} />
         <FormSection title="Your review">
           <SelectField
@@ -70,7 +71,7 @@ export default async function EditReviewPage({
           />
         </FormSection>
         <FormActions submitLabel="Save review" cancelHref="/dashboard/reviews" />
-      </form>
+      </ActionForm>
     </FormShell>
   );
 }

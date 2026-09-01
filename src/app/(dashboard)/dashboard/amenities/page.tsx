@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Pencil, Plus } from "lucide-react";
 
 import { DataTable, type Column } from "@/components/dashboard/data-table";
 import { DeleteDialog } from "@/components/dashboard/delete-dialog";
@@ -75,12 +75,21 @@ export default async function AmenitiesPage() {
       align: "right",
       mobile: "footer",
       cell: (a) => (
-        <DeleteDialog
-          action={deleteAmenity}
-          id={a.id}
-          title={`Delete ${a.name}`}
-          description="This removes the amenity from every property and room that uses it."
-        />
+        <div className="flex flex-wrap justify-end gap-1 md:flex-nowrap">
+          <Button asChild size="sm" variant="outline">
+            <Link href={`/dashboard/amenities/${a.id}/edit`}>
+              <Pencil className="size-3.5" aria-hidden />
+              Edit
+            </Link>
+          </Button>
+          <DeleteDialog
+            action={deleteAmenity}
+            id={a.id}
+            title={`Delete ${a.name}`}
+            description="This removes the amenity from every property and room that uses it."
+            iconOnly
+          />
+        </div>
       ),
     },
   ];

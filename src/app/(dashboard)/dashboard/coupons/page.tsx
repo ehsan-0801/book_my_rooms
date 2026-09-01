@@ -7,6 +7,7 @@ import { DeleteDialog } from "@/components/dashboard/delete-dialog";
 import { EmptyState, PageHeader } from "@/components/dashboard/ui";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ActionForm, SubmitButton } from "@/components/dashboard/action-form";
 import { requireAdmin } from "@/lib/auth-guards";
 import { bdt, formatDateLong } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -124,12 +125,12 @@ export default async function CouponsPage() {
       mobile: "footer",
       cell: (c) => (
         <div className="flex flex-wrap justify-end gap-1 md:flex-nowrap">
-          <form action={toggleCoupon}>
+          <ActionForm action={toggleCoupon}>
             <input type="hidden" name="id" value={c.id} />
-            <Button type="submit" size="sm" variant="ghost">
+            <SubmitButton size="sm" variant="ghost">
               {c.isActive ? "Pause" : "Activate"}
-            </Button>
-          </form>
+            </SubmitButton>
+          </ActionForm>
           <Button asChild size="sm" variant="outline">
             <Link href={`/dashboard/coupons/${c.id}/edit`}>
               <Pencil className="size-3.5" aria-hidden />

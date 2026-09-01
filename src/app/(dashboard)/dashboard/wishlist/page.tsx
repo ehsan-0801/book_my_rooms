@@ -6,6 +6,7 @@ import { Heart, MapPin, Star } from "lucide-react";
 import { EmptyState, PageHeader } from "@/components/dashboard/ui";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ActionForm, SubmitButton } from "@/components/dashboard/action-form";
 import { requireUser } from "@/lib/auth-guards";
 import { bdt } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -65,21 +66,20 @@ export default async function WishlistPage() {
                     className="object-cover"
                   />
                 ) : null}
-                <form
+                <ActionForm
                   action={toggleWishlist}
                   className="absolute top-2 right-2"
                 >
                   <input type="hidden" name="propertyId" value={item.propertyId} />
-                  <Button
-                    type="submit"
+                  <SubmitButton
                     size="icon"
                     variant="secondary"
                     aria-label={`Remove ${item.property.name} from wishlist`}
                     className="size-8 rounded-full bg-background/90 backdrop-blur"
                   >
                     <Heart className="size-4 fill-destructive text-destructive" aria-hidden />
-                  </Button>
-                </form>
+                  </SubmitButton>
+                </ActionForm>
               </div>
 
               <div className="p-4">

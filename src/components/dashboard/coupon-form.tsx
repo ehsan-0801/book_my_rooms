@@ -6,6 +6,8 @@ import {
   TextAreaField,
   TextField,
 } from "@/components/dashboard/form";
+import { ActionForm } from "@/components/dashboard/action-form";
+import type { ActionResult } from "@/lib/actions/result";
 
 export interface CouponFormData {
   id?: string;
@@ -28,12 +30,15 @@ export function CouponForm({
   coupon,
   submitLabel,
 }: {
-  action: (formData: FormData) => Promise<void>;
+  action: (
+    prev: ActionResult | undefined,
+    formData: FormData,
+  ) => Promise<ActionResult>;
   coupon?: CouponFormData;
   submitLabel: string;
 }) {
   return (
-    <form action={action} className="space-y-6">
+    <ActionForm action={action} className="space-y-6">
       {coupon?.id ? <input type="hidden" name="id" value={coupon.id} /> : null}
 
       <FormSection title="Code & discount">
@@ -122,6 +127,6 @@ export function CouponForm({
       </FormSection>
 
       <FormActions submitLabel={submitLabel} cancelHref="/dashboard/coupons" />
-    </form>
+    </ActionForm>
   );
 }

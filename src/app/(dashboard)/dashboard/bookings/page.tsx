@@ -5,6 +5,7 @@ import { Eye } from "lucide-react";
 import { DataTable, type Column } from "@/components/dashboard/data-table";
 import { EmptyState, PageHeader, StatusBadge } from "@/components/dashboard/ui";
 import { Button } from "@/components/ui/button";
+import { ActionForm, SubmitButton } from "@/components/dashboard/action-form";
 import { requireUser } from "@/lib/auth-guards";
 import { bdt, formatDateLong } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -151,33 +152,32 @@ export default async function BookingsPage({
 
           {isCustomer ? (
             ["PENDING", "PAYMENT_PENDING", "CONFIRMED"].includes(b.status) ? (
-              <form action={requestCancellation}>
+              <ActionForm action={requestCancellation}>
                 <input type="hidden" name="id" value={b.id} />
-                <Button
-                  type="submit"
+                <SubmitButton
                   size="sm"
                   variant="ghost"
                   className="text-destructive hover:text-destructive"
                 >
                   Cancel
-                </Button>
-              </form>
+                </SubmitButton>
+              </ActionForm>
             ) : null
           ) : (
             <>
               {["PENDING", "PAYMENT_PENDING"].includes(b.status) ? (
-                <form action={setBookingStatus}>
+                <ActionForm action={setBookingStatus}>
                   <input type="hidden" name="id" value={b.id} />
                   <input type="hidden" name="status" value="CONFIRMED" />
-                  <Button type="submit" size="sm">Confirm</Button>
-                </form>
+                  <SubmitButton size="sm">Confirm</SubmitButton>
+                </ActionForm>
               ) : null}
               {b.status === "CONFIRMED" ? (
-                <form action={setBookingStatus}>
+                <ActionForm action={setBookingStatus}>
                   <input type="hidden" name="id" value={b.id} />
                   <input type="hidden" name="status" value="COMPLETED" />
-                  <Button type="submit" size="sm" variant="outline">Check out</Button>
-                </form>
+                  <SubmitButton size="sm" variant="outline">Check out</SubmitButton>
+                </ActionForm>
               ) : null}
             </>
           )}

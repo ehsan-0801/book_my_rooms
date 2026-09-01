@@ -7,6 +7,7 @@ import { DataTable, type Column } from "@/components/dashboard/data-table";
 import { DeleteDialog } from "@/components/dashboard/delete-dialog";
 import { EmptyState, PageHeader, StatusBadge } from "@/components/dashboard/ui";
 import { Button } from "@/components/ui/button";
+import { ActionForm, SubmitButton } from "@/components/dashboard/action-form";
 import { requireRole } from "@/lib/auth-guards";
 import { bdt } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -160,25 +161,23 @@ export default async function PropertiesPage({
 
           {isAdmin ? (
             <>
-              <form action={setPropertyStatus}>
+              <ActionForm action={setPropertyStatus}>
                 <input type="hidden" name="id" value={p.id} />
                 <input
                   type="hidden"
                   name="status"
                   value={p.status === "PUBLISHED" ? "UNPUBLISHED" : "PUBLISHED"}
                 />
-                <Button
-                  type="submit"
+                <SubmitButton
                   size="sm"
                   variant={p.status === "PUBLISHED" ? "outline" : "default"}
                 >
                   {p.status === "PUBLISHED" ? "Unpublish" : "Publish"}
-                </Button>
-              </form>
-              <form action={togglePropertyFeatured}>
+                </SubmitButton>
+              </ActionForm>
+              <ActionForm action={togglePropertyFeatured}>
                 <input type="hidden" name="id" value={p.id} />
-                <Button
-                  type="submit"
+                <SubmitButton
                   size="sm"
                   variant={p.isFeatured ? "secondary" : "ghost"}
                   aria-label={p.isFeatured ? "Unfeature" : "Feature"}
@@ -187,8 +186,8 @@ export default async function PropertiesPage({
                     className={p.isFeatured ? "size-4 fill-rating text-rating" : "size-4"}
                     aria-hidden
                   />
-                </Button>
-              </form>
+                </SubmitButton>
+              </ActionForm>
             </>
           ) : null}
 

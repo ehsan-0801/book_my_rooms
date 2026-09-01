@@ -515,6 +515,7 @@ model Payment {
   gatewayRef     String? // EPS transaction id
   gatewayPayload Json?
   paidAt         DateTime?
+  refundedAt     DateTime?
   failureReason  String?
   createdAt      DateTime      @default(now())
 

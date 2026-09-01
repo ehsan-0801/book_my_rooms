@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { DataTable, type Column } from "@/components/dashboard/data-table";
 import { PageHeader, StatCard, StatusBadge } from "@/components/dashboard/ui";
 import { Button } from "@/components/ui/button";
+import { ActionForm, SubmitButton } from "@/components/dashboard/action-form";
 import { requireAdmin } from "@/lib/auth-guards";
 import { bdt, formatDateLong } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -112,13 +113,18 @@ export default async function CustomerDetailPage({
         title={customer.name}
         description={`${customer.email} · joined ${formatDateLong(customer.createdAt)}`}
         action={
-          <form action={setCustomerActive}>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="outline">
+              <Link href={`/dashboard/customers/${customer.id}/edit`}>Edit details</Link>
+            </Button>
+          <ActionForm action={setCustomerActive}>
             <input type="hidden" name="id" value={customer.id} />
             <input type="hidden" name="active" value={customer.isActive ? "false" : "true"} />
-            <Button type="submit" variant={customer.isActive ? "outline" : "default"}>
+            <SubmitButton variant={customer.isActive ? "outline" : "default"}>
               {customer.isActive ? "Deactivate account" : "Reactivate account"}
-            </Button>
-          </form>
+            </SubmitButton>
+          </ActionForm>
+          </div>
         }
       />
 

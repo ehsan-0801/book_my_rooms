@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { DataTable, type Column } from "@/components/dashboard/data-table";
 import { PageHeader, StatCard, StatusBadge } from "@/components/dashboard/ui";
 import { Button } from "@/components/ui/button";
+import { ActionForm, SubmitButton } from "@/components/dashboard/action-form";
 import { requireAdmin } from "@/lib/auth-guards";
 import { bdt, formatDateLong } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -109,18 +110,21 @@ export default async function VendorDetailPage({
         action={
           <div className="flex flex-wrap items-center gap-2">
             <StatusBadge status={vendor.status} />
+            <Button asChild size="sm" variant="outline">
+              <Link href={`/dashboard/vendors/${vendor.id}/edit`}>Edit details</Link>
+            </Button>
             {vendor.status !== "APPROVED" ? (
-              <form action={setVendorStatus}>
+              <ActionForm action={setVendorStatus}>
                 <input type="hidden" name="id" value={vendor.id} />
                 <input type="hidden" name="status" value="APPROVED" />
-                <Button type="submit" size="sm">Approve</Button>
-              </form>
+                <SubmitButton size="sm">Approve</SubmitButton>
+              </ActionForm>
             ) : (
-              <form action={setVendorStatus}>
+              <ActionForm action={setVendorStatus}>
                 <input type="hidden" name="id" value={vendor.id} />
                 <input type="hidden" name="status" value="SUSPENDED" />
-                <Button type="submit" size="sm" variant="outline">Suspend</Button>
-              </form>
+                <SubmitButton size="sm" variant="outline">Suspend</SubmitButton>
+              </ActionForm>
             )}
           </div>
         }

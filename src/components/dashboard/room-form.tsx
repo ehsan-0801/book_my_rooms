@@ -8,6 +8,8 @@ import {
 } from "@/components/dashboard/form";
 import { ImageUploader } from "@/components/dashboard/image-uploader";
 import { Label } from "@/components/ui/label";
+import { ActionForm } from "@/components/dashboard/action-form";
+import type { ActionResult } from "@/lib/actions/result";
 
 export interface RoomFormData {
   id?: string;
@@ -36,7 +38,10 @@ export function RoomForm({
   amenities,
   submitLabel,
 }: {
-  action: (formData: FormData) => Promise<void>;
+  action: (
+    prev: ActionResult | undefined,
+    formData: FormData,
+  ) => Promise<ActionResult>;
   room?: RoomFormData;
   properties: { id: string; name: string }[];
   amenities: { id: string; name: string }[];
@@ -45,7 +50,7 @@ export function RoomForm({
   const selected = new Set(room?.amenityIds ?? []);
 
   return (
-    <form action={action} className="space-y-6">
+    <ActionForm action={action} className="space-y-6">
       {room?.id ? <input type="hidden" name="id" value={room.id} /> : null}
 
       <FormSection title="Room details">
@@ -195,6 +200,6 @@ export function RoomForm({
       </FormSection>
 
       <FormActions submitLabel={submitLabel} cancelHref="/dashboard/rooms" />
-    </form>
+    </ActionForm>
   );
 }

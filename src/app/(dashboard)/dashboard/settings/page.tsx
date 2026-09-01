@@ -6,9 +6,9 @@ import {
 } from "@/components/dashboard/form";
 import { ImageUploader } from "@/components/dashboard/image-uploader";
 import { PageHeader, StatusBadge } from "@/components/dashboard/ui";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ActionForm, SubmitButton } from "@/components/dashboard/action-form";
 import { requireUser } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import {
@@ -44,7 +44,7 @@ export default async function SettingsPage() {
       />
 
       {/* Profile */}
-      <form action={updateOwnProfile} className="space-y-4">
+      <ActionForm action={updateOwnProfile} className="space-y-4">
         <FormSection title="Profile" description="How you appear across the platform.">
           <TextField label="Full name" name="name" required defaultValue={user.name} />
           <TextField
@@ -77,13 +77,13 @@ export default async function SettingsPage() {
           </div>
         </FormSection>
         <div className="flex justify-end">
-          <Button type="submit">Save profile</Button>
+          <SubmitButton>Save profile</SubmitButton>
         </div>
-      </form>
+      </ActionForm>
 
       {/* Vendor business details */}
       {user.vendor ? (
-        <form action={updateVendorProfile} className="space-y-4">
+        <ActionForm action={updateVendorProfile} className="space-y-4">
           <FormSection
             title="Business details"
             description="Used on invoices and for settling your payouts."
@@ -150,13 +150,13 @@ export default async function SettingsPage() {
             />
           </FormSection>
           <div className="flex justify-end">
-            <Button type="submit">Save business details</Button>
+            <SubmitButton>Save business details</SubmitButton>
           </div>
-        </form>
+        </ActionForm>
       ) : null}
 
       {/* Password */}
-      <form action={changeOwnPassword} className="space-y-4">
+      <ActionForm action={changeOwnPassword} className="space-y-4">
         <FormSection
           title="Password"
           description="Use at least 8 characters, with a letter and a number."
@@ -185,9 +185,9 @@ export default async function SettingsPage() {
           />
         </FormSection>
         <div className="flex justify-end">
-          <Button type="submit">Change password</Button>
+          <SubmitButton>Change password</SubmitButton>
         </div>
-      </form>
+      </ActionForm>
     </div>
   );
 }

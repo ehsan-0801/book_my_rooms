@@ -7,6 +7,7 @@ import { ArrowLeft, Mail, MapPin, Phone } from "lucide-react";
 import { PageHeader, StatusBadge } from "@/components/dashboard/ui";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { ActionForm, SubmitButton } from "@/components/dashboard/action-form";
 import { requireUser } from "@/lib/auth-guards";
 import { bdt, formatDateLong } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -308,46 +309,44 @@ export default async function BookingDetailPage({
               {canManage ? (
                 <>
                   {["PENDING", "PAYMENT_PENDING"].includes(booking.status) ? (
-                    <form action={setBookingStatus}>
+                    <ActionForm action={setBookingStatus}>
                       <input type="hidden" name="id" value={booking.id} />
                       <input type="hidden" name="status" value="CONFIRMED" />
-                      <Button type="submit" className="w-full">Confirm booking</Button>
-                    </form>
+                      <SubmitButton className="w-full">Confirm booking</SubmitButton>
+                    </ActionForm>
                   ) : null}
                   {booking.status === "CONFIRMED" ? (
-                    <form action={setBookingStatus}>
+                    <ActionForm action={setBookingStatus}>
                       <input type="hidden" name="id" value={booking.id} />
                       <input type="hidden" name="status" value="COMPLETED" />
-                      <Button type="submit" variant="outline" className="w-full">
+                      <SubmitButton variant="outline" className="w-full">
                         Mark as checked out
-                      </Button>
-                    </form>
+                      </SubmitButton>
+                    </ActionForm>
                   ) : null}
                   {["PENDING", "PAYMENT_PENDING", "CONFIRMED"].includes(booking.status) ? (
-                    <form action={setBookingStatus}>
+                    <ActionForm action={setBookingStatus}>
                       <input type="hidden" name="id" value={booking.id} />
                       <input type="hidden" name="status" value="CANCELLED" />
-                      <Button
-                        type="submit"
+                      <SubmitButton
                         variant="ghost"
                         className="w-full text-destructive hover:text-destructive"
                       >
                         Cancel booking
-                      </Button>
-                    </form>
+                      </SubmitButton>
+                    </ActionForm>
                   ) : null}
                 </>
               ) : ["PENDING", "PAYMENT_PENDING", "CONFIRMED"].includes(booking.status) ? (
-                <form action={requestCancellation}>
+                <ActionForm action={requestCancellation}>
                   <input type="hidden" name="id" value={booking.id} />
-                  <Button
-                    type="submit"
+                  <SubmitButton
                     variant="outline"
                     className="w-full text-destructive hover:text-destructive"
                   >
                     Request cancellation
-                  </Button>
-                </form>
+                  </SubmitButton>
+                </ActionForm>
               ) : (
                 <p className="text-sm text-muted-foreground">
                   This booking is closed — no further actions are available.

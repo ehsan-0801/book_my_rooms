@@ -28,13 +28,17 @@ export const DASHBOARD_NAV: Record<"ADMIN" | "VENDOR" | "CUSTOMER", NavSection[]
       title: "Finance",
       items: [
         { href: "/dashboard/payments", label: "Payments", icon: "CreditCard" },
+        { href: "/dashboard/refunds", label: "Refunds", icon: "Undo2" },
         { href: "/dashboard/commissions", label: "Commissions", icon: "Percent" },
+        { href: "/dashboard/payouts", label: "Payouts", icon: "Wallet" },
       ],
     },
     {
       title: "Catalogue",
       items: [
         { href: "/dashboard/destinations", label: "Destinations", icon: "MapPin" },
+        { href: "/dashboard/areas", label: "Areas", icon: "Map" },
+        { href: "/dashboard/property-types", label: "Property types", icon: "Building2" },
         { href: "/dashboard/amenities", label: "Amenities", icon: "Sparkles" },
         { href: "/dashboard/coupons", label: "Coupons", icon: "TicketPercent" },
       ],
@@ -44,6 +48,7 @@ export const DASHBOARD_NAV: Record<"ADMIN" | "VENDOR" | "CUSTOMER", NavSection[]
       items: [
         { href: "/dashboard/reviews", label: "Reviews", icon: "MessageSquareText" },
         { href: "/dashboard/banners", label: "Banners", icon: "Megaphone" },
+        { href: "/dashboard/pages", label: "Pages", icon: "FileText" },
       ],
     },
     { items: [{ href: "/dashboard/settings", label: "Settings", icon: "Settings" }] },

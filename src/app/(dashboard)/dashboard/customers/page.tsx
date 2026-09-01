@@ -7,6 +7,7 @@ import { DeleteDialog } from "@/components/dashboard/delete-dialog";
 import { EmptyState, PageHeader } from "@/components/dashboard/ui";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ActionForm, SubmitButton } from "@/components/dashboard/action-form";
 import { requireAdmin } from "@/lib/auth-guards";
 import { bdt, formatDateLong } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -116,13 +117,13 @@ export default async function CustomersPage() {
               View
             </Link>
           </Button>
-          <form action={setCustomerActive}>
+          <ActionForm action={setCustomerActive}>
             <input type="hidden" name="id" value={c.id} />
             <input type="hidden" name="active" value={c.isActive ? "false" : "true"} />
-            <Button type="submit" size="sm" variant="ghost">
+            <SubmitButton size="sm" variant="ghost">
               {c.isActive ? "Deactivate" : "Reactivate"}
-            </Button>
-          </form>
+            </SubmitButton>
+          </ActionForm>
           <DeleteDialog
             action={deleteUser}
             id={c.id}

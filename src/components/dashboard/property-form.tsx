@@ -7,6 +7,8 @@ import {
 } from "@/components/dashboard/form";
 import { ImageUploader } from "@/components/dashboard/image-uploader";
 import { Label } from "@/components/ui/label";
+import { ActionForm } from "@/components/dashboard/action-form";
+import type { ActionResult } from "@/lib/actions/result";
 
 export interface PropertyFormData {
   id?: string;
@@ -43,7 +45,10 @@ export function PropertyForm({
   vendors,
   submitLabel,
 }: {
-  action: (formData: FormData) => Promise<void>;
+  action: (
+    prev: ActionResult | undefined,
+    formData: FormData,
+  ) => Promise<ActionResult>;
   property?: PropertyFormData;
   types: { id: string; name: string }[];
   districts: { id: string; name: string }[];
@@ -55,7 +60,7 @@ export function PropertyForm({
   const selected = new Set(property?.amenityIds ?? []);
 
   return (
-    <form action={action} className="space-y-6">
+    <ActionForm action={action} className="space-y-6">
       {property?.id ? <input type="hidden" name="id" value={property.id} /> : null}
 
       <FormSection title="Basics" description="How the property appears in search results.">
@@ -255,6 +260,6 @@ export function PropertyForm({
       </FormSection>
 
       <FormActions submitLabel={submitLabel} cancelHref="/dashboard/properties" />
-    </form>
+    </ActionForm>
   );
 }

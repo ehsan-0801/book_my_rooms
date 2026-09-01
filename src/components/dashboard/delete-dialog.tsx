@@ -5,6 +5,8 @@ import { AlertTriangle, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { progress } from "@/lib/progress";
+import type { ActionResult } from "@/lib/actions/result";
 import {
   Dialog,
   DialogClose,
@@ -36,7 +38,10 @@ export function DeleteDialog({
   triggerVariant = "ghost",
   iconOnly = false,
 }: {
-  action: (formData: FormData) => Promise<void>;
+  action: (
+    prev: ActionResult | undefined,
+    formData: FormData,
+  ) => Promise<ActionResult>;
   id: string;
   title: string;
   description: string;
@@ -54,17 +59,29 @@ export function DeleteDialog({
 
   function onConfirm() {
     startTransition(async () => {
+      progress.start();
       try {
         const fd = new FormData();
         fd.set("id", id);
-        await action(fd);
-        toast.success(`${title.replace(/^Delete /, "")} deleted`);
-        setOpen(false);
-        setTyped("");
+        const result = await action(undefined, fd);
+
+        if (result.status === "success") {
+          toast.success(result.message);
+          setOpen(false);
+          setTyped("");
+        } else if (result.status === "warning") {
+          // A refusal the user can act on — keep the dialog open so the
+          // explanation stays next to the thing they were deleting.
+          toast.warning(result.message);
+        } else {
+          toast.error(result.message);
+        }
       } catch (error) {
         toast.error(
           error instanceof Error ? error.message : "Could not delete that record",
         );
+      } finally {
+        progress.done();
       }
     });
   }

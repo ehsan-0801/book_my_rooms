@@ -6,6 +6,7 @@ import { EmptyState, PageHeader } from "@/components/dashboard/ui";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ActionForm, SubmitButton } from "@/components/dashboard/action-form";
 import { requireVendor } from "@/lib/auth-guards";
 import { applyDiscount, bdt } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -84,7 +85,7 @@ export default async function OffersPage() {
                     <span className="text-xs text-muted-foreground">/ night</span>
                   </p>
 
-                  <form action={setRoomDiscount} className="mt-4 flex items-end gap-2">
+                  <ActionForm action={setRoomDiscount} className="mt-4 flex items-end gap-2">
                     <input type="hidden" name="roomId" value={r.id} />
                     <div className="flex-1">
                       <label
@@ -103,10 +104,10 @@ export default async function OffersPage() {
                         className="mt-1 h-9"
                       />
                     </div>
-                    <Button type="submit" size="sm" className="h-9">
+                    <SubmitButton size="sm" className="h-9">
                       Apply
-                    </Button>
-                  </form>
+                    </SubmitButton>
+                  </ActionForm>
                 </div>
               </li>
             );

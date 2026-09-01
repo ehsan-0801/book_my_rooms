@@ -10,6 +10,7 @@ import {
 } from "@/components/dashboard/form";
 import { requireAdmin } from "@/lib/auth-guards";
 import { createAmenity } from "@/lib/actions/catalog";
+import { ActionForm } from "@/components/dashboard/action-form";
 
 export const metadata: Metadata = { title: "New amenity", robots: { index: false } };
 
@@ -22,7 +23,7 @@ export default async function NewAmenityPage() {
       backHref="/dashboard/amenities"
       backLabel="Back to amenities"
     >
-      <form action={createAmenity} className="space-y-6">
+      <ActionForm action={createAmenity} className="space-y-6">
         <FormSection title="Amenity">
           <TextField
             label="Name"
@@ -56,7 +57,7 @@ export default async function NewAmenityPage() {
           />
         </FormSection>
         <FormActions submitLabel="Create amenity" cancelHref="/dashboard/amenities" />
-      </form>
+      </ActionForm>
     </FormShell>
   );
 }

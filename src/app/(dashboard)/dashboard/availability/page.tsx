@@ -5,6 +5,7 @@ import { EmptyState, PageHeader } from "@/components/dashboard/ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ActionForm, SubmitButton } from "@/components/dashboard/action-form";
 import { requireRole } from "@/lib/auth-guards";
 import { bdt } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -106,7 +107,7 @@ export default async function AvailabilityPage({
         <p className="mt-1 text-sm text-muted-foreground">
           Useful for maintenance windows or when a property is fully booked offline.
         </p>
-        <form
+        <ActionForm
           action={bulkCloseDates}
           className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:items-end"
         >
@@ -130,8 +131,8 @@ export default async function AvailabilityPage({
               <option value="false">Reopen</option>
             </select>
           </div>
-          <Button type="submit">Apply to range</Button>
-        </form>
+          <SubmitButton>Apply to range</SubmitButton>
+        </ActionForm>
       </section>
 
       {/* Calendar */}
@@ -201,7 +202,7 @@ export default async function AvailabilityPage({
 
                 {/* Native <details> keeps this a server component — no JS needed
                     to edit a single night. */}
-                <form action={setDateAvailability} className="mt-2 space-y-1.5">
+                <ActionForm action={setDateAvailability} className="mt-2 space-y-1.5">
                   <input type="hidden" name="roomId" value={selected.id} />
                   <input type="hidden" name="date" value={key} />
                   <label className="block text-[10px] font-medium">
@@ -236,10 +237,10 @@ export default async function AvailabilityPage({
                     />
                     Closed
                   </label>
-                  <Button type="submit" size="sm" className="h-7 w-full text-[10px]">
+                  <SubmitButton size="sm" className="h-7 w-full text-[10px]">
                     Save
-                  </Button>
-                </form>
+                  </SubmitButton>
+                </ActionForm>
               </details>
             );
           })}

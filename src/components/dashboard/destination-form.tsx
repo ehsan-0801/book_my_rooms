@@ -7,6 +7,8 @@ import {
 } from "@/components/dashboard/form";
 import { ImageUploader } from "@/components/dashboard/image-uploader";
 import { Label } from "@/components/ui/label";
+import { ActionForm } from "@/components/dashboard/action-form";
+import type { ActionResult } from "@/lib/actions/result";
 
 export interface DestinationFormData {
   id?: string;
@@ -24,13 +26,16 @@ export function DestinationForm({
   divisions,
   submitLabel,
 }: {
-  action: (formData: FormData) => Promise<void>;
+  action: (
+    prev: ActionResult | undefined,
+    formData: FormData,
+  ) => Promise<ActionResult>;
   destination?: DestinationFormData;
   divisions: { id: string; name: string }[];
   submitLabel: string;
 }) {
   return (
-    <form action={action} className="space-y-6">
+    <ActionForm action={action} className="space-y-6">
       {destination?.id ? (
         <input type="hidden" name="id" value={destination.id} />
       ) : null}
@@ -93,6 +98,6 @@ export function DestinationForm({
       </FormSection>
 
       <FormActions submitLabel={submitLabel} cancelHref="/dashboard/destinations" />
-    </form>
+    </ActionForm>
   );
 }

@@ -589,6 +589,29 @@ async function main() {
   }
   console.log(`  payouts        ${payoutCount}`);
 
+  // ------------------------------------------------------------ wishlists
+  // Gives the customer panel something to show out of the box.
+  await prisma.wishlistItem.deleteMany();
+  const wishlistTargets = await prisma.property.findMany({
+    take: 6,
+    orderBy: { ratingAvg: "desc" },
+    select: { id: true },
+  });
+  let wishlistCount = 0;
+  for (const customer of customers.slice(0, 3)) {
+    for (const property of wishlistTargets.slice(0, int(2, 4))) {
+      await prisma.wishlistItem.upsert({
+        where: {
+          userId_propertyId: { userId: customer.id, propertyId: property.id },
+        },
+        update: {},
+        create: { userId: customer.id, propertyId: property.id },
+      });
+      wishlistCount += 1;
+    }
+  }
+  console.log(`  wishlists      ${wishlistCount}`);
+
   // ------------------------------------------------------------ marketing
   await prisma.banner.deleteMany();
   await prisma.banner.createMany({

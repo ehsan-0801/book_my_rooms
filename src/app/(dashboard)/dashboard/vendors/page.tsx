@@ -7,6 +7,7 @@ import { DeleteDialog } from "@/components/dashboard/delete-dialog";
 import { EmptyState, PageHeader, StatusBadge } from "@/components/dashboard/ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ActionForm, SubmitButton } from "@/components/dashboard/action-form";
 import { requireAdmin } from "@/lib/auth-guards";
 import { bdt, formatDateLong } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -92,7 +93,7 @@ export default async function VendorsPage({
       header: "Commission",
       mobile: "body",
       cell: (v) => (
-        <form action={setVendorCommission} className="flex items-center gap-1">
+        <ActionForm action={setVendorCommission} className="flex items-center gap-1">
           <input type="hidden" name="id" value={v.id} />
           <Input
             name="rate"
@@ -105,10 +106,10 @@ export default async function VendorsPage({
             className="h-8 w-20"
           />
           <span className="text-xs text-muted-foreground">%</span>
-          <Button type="submit" size="sm" variant="ghost" className="h-8 px-2 text-xs">
+          <SubmitButton size="sm" variant="ghost" className="h-8 px-2 text-xs">
             Save
-          </Button>
-        </form>
+          </SubmitButton>
+        </ActionForm>
       ),
     },
     {
@@ -142,32 +143,31 @@ export default async function VendorsPage({
             </Link>
           </Button>
           {v.status !== "APPROVED" ? (
-            <form action={setVendorStatus}>
+            <ActionForm action={setVendorStatus}>
               <input type="hidden" name="id" value={v.id} />
               <input type="hidden" name="status" value="APPROVED" />
-              <Button type="submit" size="sm">Approve</Button>
-            </form>
+              <SubmitButton size="sm">Approve</SubmitButton>
+            </ActionForm>
           ) : null}
           {v.status === "PENDING" ? (
-            <form action={setVendorStatus}>
+            <ActionForm action={setVendorStatus}>
               <input type="hidden" name="id" value={v.id} />
               <input type="hidden" name="status" value="REJECTED" />
-              <Button type="submit" size="sm" variant="outline">Reject</Button>
-            </form>
+              <SubmitButton size="sm" variant="outline">Reject</SubmitButton>
+            </ActionForm>
           ) : null}
           {v.status === "APPROVED" ? (
-            <form action={setVendorStatus}>
+            <ActionForm action={setVendorStatus}>
               <input type="hidden" name="id" value={v.id} />
               <input type="hidden" name="status" value="SUSPENDED" />
-              <Button
-                type="submit"
+              <SubmitButton
                 size="sm"
                 variant="ghost"
                 className="text-destructive hover:text-destructive"
               >
                 Suspend
-              </Button>
-            </form>
+              </SubmitButton>
+            </ActionForm>
           ) : null}
           <DeleteDialog
             action={deleteVendor}

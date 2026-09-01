@@ -8,6 +8,7 @@ import { RatingStars } from "@/components/property/rating-stars";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { ActionForm, SubmitButton } from "@/components/dashboard/action-form";
 import { requireUser } from "@/lib/auth-guards";
 import { formatDateLong } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -160,17 +161,17 @@ export default async function ReviewsPage({
 
               <div className="mt-4 flex flex-wrap justify-end gap-2 border-t pt-4">
                 {isAdmin ? (
-                  <form action={moderateReview}>
+                  <ActionForm action={moderateReview}>
                     <input type="hidden" name="id" value={r.id} />
                     <input
                       type="hidden"
                       name="approve"
                       value={r.isApproved ? "false" : "true"}
                     />
-                    <Button type="submit" size="sm" variant={r.isApproved ? "outline" : "default"}>
+                    <SubmitButton size="sm" variant={r.isApproved ? "outline" : "default"}>
                       {r.isApproved ? "Unpublish" : "Approve"}
-                    </Button>
-                  </form>
+                    </SubmitButton>
+                  </ActionForm>
                 ) : null}
 
                 {isCustomer ? (
@@ -193,7 +194,7 @@ export default async function ReviewsPage({
               </div>
 
               {isVendor && !r.vendorReply ? (
-                <form action={replyToReview} className="mt-4 border-t pt-4">
+                <ActionForm action={replyToReview} className="mt-4 border-t pt-4">
                   <input type="hidden" name="id" value={r.id} />
                   <label htmlFor={`reply-${r.id}`} className="text-sm font-medium">
                     Reply publicly
@@ -207,9 +208,9 @@ export default async function ReviewsPage({
                     placeholder="Thank the guest, or address what they raised."
                   />
                   <div className="mt-2 flex justify-end">
-                    <Button type="submit" size="sm">Post reply</Button>
+                    <SubmitButton size="sm">Post reply</SubmitButton>
                   </div>
-                </form>
+                </ActionForm>
               ) : null}
             </li>
           ))}

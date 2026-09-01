@@ -7,6 +7,8 @@ import {
 } from "@/components/dashboard/form";
 import { ImageUploader } from "@/components/dashboard/image-uploader";
 import { Label } from "@/components/ui/label";
+import { ActionForm } from "@/components/dashboard/action-form";
+import type { ActionResult } from "@/lib/actions/result";
 
 export interface BannerFormData {
   id?: string;
@@ -27,12 +29,15 @@ export function BannerForm({
   banner,
   submitLabel,
 }: {
-  action: (formData: FormData) => Promise<void>;
+  action: (
+    prev: ActionResult | undefined,
+    formData: FormData,
+  ) => Promise<ActionResult>;
   banner?: BannerFormData;
   submitLabel: string;
 }) {
   return (
-    <form action={action} className="space-y-6">
+    <ActionForm action={action} className="space-y-6">
       {banner?.id ? <input type="hidden" name="id" value={banner.id} /> : null}
 
       <FormSection title="Banner">
@@ -112,6 +117,6 @@ export function BannerForm({
       </FormSection>
 
       <FormActions submitLabel={submitLabel} cancelHref="/dashboard/banners" />
-    </form>
+    </ActionForm>
   );
 }

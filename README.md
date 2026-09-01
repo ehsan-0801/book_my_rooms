@@ -89,6 +89,41 @@ Deletion is the only action behind a confirmation modal
 (`delete-dialog.tsx`) — everything else is reversible and submits directly.
 Cascading deletes additionally require typing `DELETE`.
 
+### Feedback: toasts, progress and skeletons
+
+Every mutation returns an `ActionResult` (`src/lib/actions/result.ts`) rather
+than throwing. A thrown error in a server action surfaces as an error boundary,
+which loses the message and destroys the page the user was working on;
+returning a result lets the UI toast it and keep the form intact.
+
+- `success` — it worked
+- `warning` — a refusal the user can fix ("cancel the 3 active bookings first")
+- `error` — validation or an unexpected failure
+
+`ActionForm` / `ActionButton` (`action-form.tsx`) wrap every mutation and
+announce the result. They submit **imperatively** rather than through
+`useActionState`: many of these forms delete the row they live in, so the
+component unmounts the moment the action revalidates and an effect watching the
+returned state would never fire. Awaiting the action inside the submit handler
+keeps the continuation alive past unmount, so the toast always lands.
+
+Toasts sit **bottom-right on desktop and top-centre on mobile**
+(`app-toaster.tsx`) — a bottom toast on a phone would land under the sticky
+booking bar and the WhatsApp button.
+
+A progress bar under the navbar (`navigation-progress.tsx`) covers both route
+changes and saves. App Router exposes no router events, so navigation is
+detected from both ends: a delegated click on any internal link starts it, and
+the pathname changing finishes it. Server actions drive the same store.
+
+Every dashboard route has a `loading.tsx` built from the shared skeletons in
+`skeletons.tsx`, shaped like the page it replaces — same table-on-desktop /
+cards-on-mobile split as `DataTable`, so nothing jumps when data lands.
+
+> Loading boundaries only appear on client navigation when the route was
+> prefetched, and **Next disables prefetching in development**. Verify skeletons
+> against `npm run build && npx next start`, not `npm run dev`.
+
 ---
 
 ## Routes
@@ -114,7 +149,9 @@ Cascading deletes additionally require typing `DELETE`.
 | `customers`, `customers/[id]` | ✅ | — | — |
 | `payments`, `commissions` | ✅ | — | — |
 | `destinations`, `amenities`, `coupons` | ✅ | — | — |
-| `banners` | ✅ | — | — |
+| `banners`, `pages` | ✅ | — | — |
+| `refunds`, `payouts` | ✅ | — | — |
+| `areas`, `property-types` | ✅ | — | — |
 | `wishlist` | — | — | ✅ |
 
 ---

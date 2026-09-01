@@ -1,4 +1,7 @@
+import { Suspense } from "react";
+
 import { Logo } from "@/components/site/logo";
+import { NavigationProgress } from "@/components/dashboard/navigation-progress";
 import { MobileSidebar } from "@/components/dashboard/mobile-sidebar";
 import { SidebarNav } from "@/components/dashboard/sidebar-nav";
 import { UserMenu } from "@/components/dashboard/user-menu";
@@ -14,6 +17,10 @@ export default async function DashboardLayout({ children }: LayoutProps<"/">) {
   return (
     <div className="flex min-h-svh flex-col">
       <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur-md">
+        {/* useSearchParams inside needs a boundary so the shell stays static. */}
+        <Suspense fallback={null}>
+          <NavigationProgress />
+        </Suspense>
         <div className="flex h-16 items-center gap-2 px-4 sm:px-6">
           <MobileSidebar sections={sections} />
           <Logo className="hidden sm:inline-flex" />
