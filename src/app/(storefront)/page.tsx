@@ -8,31 +8,39 @@ import { VendorCta } from "@/components/home/vendor-cta";
 import { WhyUs } from "@/components/home/why-us";
 import { PropertyCard } from "@/components/property/property-card";
 import { CardRail, Section, SectionHeader } from "@/components/site/section";
-import { DESTINATIONS } from "@/lib/destinations";
 import {
-  budgetProperties,
-  discountedProperties,
-  ecoProperties,
-  featuredProperties,
-  topReviews,
-} from "@/lib/properties";
+  getBudgetProperties,
+  getDiscountedProperties,
+  getFeaturedProperties,
+  getNatureProperties,
+  getShowcaseReviews,
+  listDestinations,
+  listPropertyTypes,
+} from "@/lib/queries/storefront";
 
-export default function HomePage() {
-  const featured = featuredProperties().slice(0, 6);
-  const offers = discountedProperties().slice(0, 3);
-  const budget = budgetProperties().slice(0, 3);
-  const eco = ecoProperties()
-    .filter((p) => p.type === "eco-resort" || p.type === "cottage" || p.type === "homestay")
-    .slice(0, 3);
-  const reviews = topReviews().slice(0, 3);
+// The homepage reflects live catalogue state, so it revalidates rather than
+// being baked at build time.
+export const revalidate = 300;
+
+export default async function HomePage() {
+  const [destinations, propertyTypes, featured, offers, budget, eco, reviews] =
+    await Promise.all([
+      listDestinations(),
+      listPropertyTypes(),
+      getFeaturedProperties(6),
+      getDiscountedProperties(3),
+      getBudgetProperties(3),
+      getNatureProperties(3),
+      getShowcaseReviews(3),
+    ]);
 
   return (
     <>
-      <Hero />
+      <Hero destinations={destinations} />
 
       {/* Property types */}
       <Section className="py-10 sm:py-12">
-        <PropertyTypeStrip />
+        <PropertyTypeStrip types={propertyTypes} />
       </Section>
 
       {/* Popular destinations — SRS §6.4 */}
@@ -44,7 +52,7 @@ export default function HomePage() {
           href="/destinations"
         />
         <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
-          {DESTINATIONS.slice(0, 8).map((d) => (
+          {destinations.slice(0, 8).map((d) => (
             <DestinationCard key={d.slug} destination={d} />
           ))}
         </div>

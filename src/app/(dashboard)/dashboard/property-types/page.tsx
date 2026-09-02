@@ -36,7 +36,7 @@ export default async function PropertyTypesPage() {
       mobile: "title",
       cell: (t) => (
         <span className="flex items-center gap-2.5 font-medium">
-          <AmenityIcon slug={t.slug} className="text-primary" />
+          <AmenityIcon icon={t.icon} className="text-primary" />
           {t.name}
         </span>
       ),

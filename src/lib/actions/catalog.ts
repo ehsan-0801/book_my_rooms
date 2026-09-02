@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { prisma } from "@/lib/prisma";
 import { recordAudit, requireAdminActor, requireVendorActor } from "@/lib/rbac";
+import { revalidateDestinations } from "@/lib/revalidate";
 import { fail, guard, ok, warn, type ActionResult } from "./result";
 
 const slugify = (v: string) =>
@@ -439,7 +440,7 @@ export async function createDistrict(
 
     await recordAudit(actor.id, "district.create", "District", district.id, { name: d.name });
     revalidatePath("/dashboard/destinations");
-    revalidatePath("/destinations");
+    revalidateDestinations(slug);
     return ok(`${d.name} added`, "/dashboard/destinations");
   });
 }
@@ -458,7 +459,7 @@ export async function updateDistrict(
     }
     const d = parsed.data;
 
-    await prisma.district.update({
+    const updated = await prisma.district.update({
       where: { id },
       data: {
         name: d.name,
@@ -468,11 +469,12 @@ export async function updateDistrict(
         isPopular: d.isPopular ?? false,
         isActive: d.isActive ?? true,
       },
+      select: { slug: true },
     });
 
     await recordAudit(actor.id, "district.update", "District", id);
     revalidatePath("/dashboard/destinations");
-    revalidatePath("/destinations");
+    revalidateDestinations(updated.slug);
     return ok(`${d.name} saved`, "/dashboard/destinations");
   });
 }
@@ -487,7 +489,7 @@ export async function deleteDistrict(
 
     const district = await prisma.district.findUnique({
       where: { id },
-      select: { name: true, _count: { select: { properties: true } } },
+      select: { name: true, slug: true, _count: { select: { properties: true } } },
     });
     if (!district) return fail("That destination no longer exists");
     if (district._count.properties > 0) {
@@ -500,7 +502,7 @@ export async function deleteDistrict(
     await prisma.district.delete({ where: { id } });
     await recordAudit(actor.id, "district.delete", "District", id);
     revalidatePath("/dashboard/destinations");
-    revalidatePath("/destinations");
+    revalidateDestinations(district.slug);
     return ok(`${district.name} deleted`);
   });
 }

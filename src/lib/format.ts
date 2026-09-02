@@ -50,3 +50,18 @@ export function applyDiscount(price: number, percentOff?: number) {
   if (!percentOff) return price;
   return Math.round(price * (1 - percentOff / 100));
 }
+
+/**
+ * Cheapest nightly rate a property actually offers, after per-room discounts.
+ * Falls back to the denormalised Property.basePrice when rooms aren't loaded
+ * (listing cards select rooms' prices only).
+ */
+export function lowestRate(property: {
+  basePrice: number;
+  rooms: { basePrice: number; discountPercent?: number }[];
+}) {
+  if (!property.rooms.length) return property.basePrice;
+  return Math.min(
+    ...property.rooms.map((r) => applyDiscount(r.basePrice, r.discountPercent)),
+  );
+}

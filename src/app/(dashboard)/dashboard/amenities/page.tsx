@@ -36,7 +36,7 @@ export default async function AmenitiesPage() {
       mobile: "title",
       cell: (a) => (
         <span className="flex items-center gap-2.5 font-medium">
-          <AmenityIcon slug={a.slug} className="text-primary" />
+          <AmenityIcon icon={a.icon} className="text-primary" />
           {a.name}
         </span>
       ),

@@ -10,6 +10,7 @@ import {
   recordAudit,
   requireAdminOrVendor,
 } from "@/lib/rbac";
+import { revalidateProperty } from "@/lib/revalidate";
 import { fail, guard, ok, warn, type ActionResult } from "./result";
 
 const roomSchema = z.object({
@@ -134,6 +135,7 @@ export async function createRoom(
     });
 
     await syncPropertyBasePrice(d.propertyId);
+    await revalidateProperty(d.propertyId);
     await recordAudit(actor.id, "room.create", "Room", room.id, { name: d.name });
     revalidatePath("/dashboard/rooms");
     return ok(`${d.name} created with 120 nights open`, "/dashboard/rooms");
@@ -193,6 +195,7 @@ export async function updateRoom(
     }
 
     await syncPropertyBasePrice(d.propertyId);
+    await revalidateProperty(d.propertyId);
     await recordAudit(actor.id, "room.update", "Room", id, { name: d.name });
     revalidatePath("/dashboard/rooms");
     return ok(`${d.name} saved`, "/dashboard/rooms");
@@ -226,6 +229,7 @@ export async function deleteRoom(
     });
     await prisma.room.delete({ where: { id } });
     await syncPropertyBasePrice(room.propertyId);
+    await revalidateProperty(room.propertyId);
     await recordAudit(actor.id, "room.delete", "Room", id);
     revalidatePath("/dashboard/rooms");
     return ok(`${record?.name ?? "Room"} deleted`);
@@ -269,6 +273,7 @@ export async function updateRoomRate(
     });
 
     await syncPropertyBasePrice(room.propertyId);
+    await revalidateProperty(room.propertyId);
     revalidatePath("/dashboard/rooms");
     return ok(`${room.name} rate updated`);
   });

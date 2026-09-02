@@ -4,11 +4,9 @@ import { Heart, MapPin, Scale } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AmenityIcon } from "./amenity-icon";
+import { AmenityItem } from "./amenity-icon";
 import { RatingBadge } from "./rating-stars";
-import { amenityName } from "@/lib/amenities";
-import { bdt, ratingLabel } from "@/lib/format";
-import { lowestRate } from "@/lib/properties";
+import { bdt, lowestRate, ratingLabel } from "@/lib/format";
 import type { Property } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -138,13 +136,9 @@ export function PropertyCard({
 
         {/* Amenities */}
         <ul className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-          {topAmenities.map((slug) => (
-            <li
-              key={slug}
-              className="flex items-center gap-1.5 text-xs text-muted-foreground"
-            >
-              <AmenityIcon slug={slug} className="size-3.5" />
-              {amenityName(slug)}
+          {topAmenities.map((amenity) => (
+            <li key={amenity.slug}>
+              <AmenityItem amenity={amenity} />
             </li>
           ))}
           {property.amenities.length > topAmenities.length ? (

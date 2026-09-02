@@ -10,15 +10,14 @@ import { SearchBar } from "@/components/search/search-bar";
 import { SortSelect } from "@/components/search/sort-select";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CATEGORIES, FILTER_AMENITIES, PROPERTY_TYPES } from "@/lib/amenities";
-import { getDestination } from "@/lib/destinations";
+import { countActiveFilters, parseSearchQuery } from "@/lib/search";
+import { getFacetCounts, searchProperties } from "@/lib/queries/search";
 import {
-  PAGE_SIZE,
-  facetCounts,
-  filterProperties,
-  parseSearchQuery,
-  sortProperties,
-} from "@/lib/search";
+  getDestination,
+  listDestinations,
+  listFilterAmenities,
+  listPropertyTypes,
+} from "@/lib/queries/storefront";
 
 export const metadata: Metadata = {
   title: "Search stays",
@@ -29,29 +28,20 @@ export const metadata: Metadata = {
 export default async function PropertiesPage({ searchParams }: PageProps<"/properties">) {
   const sp = await searchParams;
   const query = parseSearchQuery(sp);
-  const destination = query.destination ? getDestination(query.destination) : undefined;
 
-  const filtered = filterProperties(query);
-  const sorted = sortProperties(filtered, query.sort);
+  // Results, facet counts and the filter vocabulary all come from the database
+  // in one round of parallel queries.
+  const [destination, { properties: results, total, page, totalPages }, counts, types, amenities] =
+    await Promise.all([
+      query.destination ? getDestination(query.destination) : Promise.resolve(null),
+      searchProperties(query),
+      getFacetCounts(query),
+      listPropertyTypes(),
+      listFilterAmenities(),
+    ]);
+  const destinations = await listDestinations();
 
-  const page = Math.max(1, query.page ?? 1);
-  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
-  const results = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-
-  // Facet counts so a filter never leads to an empty page unexpectedly.
-  const facets = facetCounts(query);
-  const counts = {
-    type: Object.fromEntries(PROPERTY_TYPES.map((t) => [t.slug, facets.type(t.slug)])),
-    category: Object.fromEntries(CATEGORIES.map((c) => [c.slug, facets.category(c.slug)])),
-    amenity: Object.fromEntries(FILTER_AMENITIES.map((a) => [a.slug, facets.amenity(a.slug)])),
-  };
-
-  const activeCount =
-    (query.type?.length ?? 0) +
-    (query.category?.length ?? 0) +
-    (query.amenities?.length ?? 0) +
-    (query.stars?.length ?? 0) +
-    (query.minPrice !== undefined || query.maxPrice !== undefined ? 1 : 0);
+  const activeCount = countActiveFilters(query);
 
   const heading = destination
     ? `Stays in ${destination.name}`
@@ -63,7 +53,11 @@ export default async function PropertiesPage({ searchParams }: PageProps<"/prope
       <div className="border-b bg-secondary/40">
         <div className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
           <Suspense fallback={<Skeleton className="h-28 w-full rounded-2xl" />}>
-            <SearchBar variant="inline" defaultDestination={query.destination ?? ""} />
+            <SearchBar
+              destinations={destinations}
+              variant="inline"
+              defaultDestination={query.destination ?? ""}
+            />
           </Suspense>
         </div>
       </div>
@@ -74,7 +68,7 @@ export default async function PropertiesPage({ searchParams }: PageProps<"/prope
           <aside className="hidden lg:block">
             <div className="sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto pr-2 pb-6">
               <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-                <FilterPanel counts={counts} />
+                <FilterPanel counts={counts} types={types} amenities={amenities} />
               </Suspense>
             </div>
           </aside>
@@ -85,7 +79,7 @@ export default async function PropertiesPage({ searchParams }: PageProps<"/prope
               <div>
                 <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{heading}</h1>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {sorted.length} propert{sorted.length === 1 ? "y" : "ies"} found
+                  {total} propert{total === 1 ? "y" : "ies"} found
                   {destination ? (
                     <>
                       {" "}
@@ -101,7 +95,7 @@ export default async function PropertiesPage({ searchParams }: PageProps<"/prope
 
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <Suspense fallback={<Skeleton className="h-9 w-28" />}>
-                  <MobileFilterButton counts={counts} activeCount={activeCount} />
+                  <MobileFilterButton counts={counts} types={types} amenities={amenities} activeCount={activeCount} />
                 </Suspense>
                 <Suspense fallback={<Skeleton className="h-9 w-56" />}>
                   <SortSelect />

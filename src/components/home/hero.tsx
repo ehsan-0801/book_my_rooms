@@ -1,6 +1,9 @@
 import { ShieldCheck, Sparkles, Zap } from "lucide-react";
 import { HeroSlider, type HeroSlide } from "./hero-slider";
-import { SearchBar } from "@/components/search/search-bar";
+import {
+  SearchBar,
+  type DestinationOption,
+} from "@/components/search/search-bar";
 
 const TRUST = [
   { Icon: Zap, label: "Instant confirmation" },
@@ -46,7 +49,7 @@ const SLIDES: HeroSlide[] = [
   },
 ];
 
-export function Hero() {
+export function Hero({ destinations }: { destinations: DestinationOption[] }) {
   return (
     <section className="relative isolate overflow-hidden">
       <HeroSlider slides={SLIDES} />
@@ -91,7 +94,7 @@ export function Hero() {
           </ul>
         </div>
 
-        <SearchBar className="mt-8 lg:mt-10" />
+        <SearchBar destinations={destinations} className="mt-8 lg:mt-10" />
       </div>
     </section>
   );

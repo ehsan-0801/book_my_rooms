@@ -228,6 +228,13 @@ model District {
   isPopular  Boolean @default(false)
   isActive   Boolean @default(true)
 
+  // Attribution for imageUrl. The seeded destination photography is CC BY-SA
+  // from Wikimedia Commons, whose licence requires the credit to be shown
+  // wherever the image is — so it travels with the record, not in code.
+  imageAuthor  String?
+  imageLicense String?
+  imageSource  String?
+
   division   Division   @relation(fields: [divisionId], references: [id])
   areas      Area[]
   properties Property[]

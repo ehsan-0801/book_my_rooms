@@ -3,8 +3,7 @@ import { BedDouble, Croissant, Maximize, Users, XCircle } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AmenityIcon } from "./amenity-icon";
-import { amenityName } from "@/lib/amenities";
+import { AmenityItem } from "./amenity-icon";
 import { applyDiscount, bdt } from "@/lib/format";
 import type { Room } from "@/lib/types";
 
@@ -58,10 +57,9 @@ export function RoomCard({
         </ul>
 
         <ul className="mt-3 flex flex-wrap gap-x-3 gap-y-1.5">
-          {room.amenities.map((slug) => (
-            <li key={slug} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <AmenityIcon slug={slug} className="size-3.5" />
-              {amenityName(slug)}
+          {room.amenities.map((amenity) => (
+            <li key={amenity.slug}>
+              <AmenityItem amenity={amenity} />
             </li>
           ))}
         </ul>

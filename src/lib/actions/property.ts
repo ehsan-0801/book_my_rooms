@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { prisma } from "@/lib/prisma";
 import { assertPropertyAccess, recordAudit, requireAdminOrVendor } from "@/lib/rbac";
+import { revalidateProperty } from "@/lib/revalidate";
 import { fail, guard, ok, warn, type ActionResult } from "./result";
 
 const propertySchema = z.object({
@@ -204,8 +205,8 @@ export async function updateProperty(
     }
 
     await recordAudit(actor.id, "property.update", "Property", id, { name: d.name });
+    await revalidateProperty(id);
     revalidatePath("/dashboard/properties");
-    revalidatePath("/");
     return ok(`${d.name} saved`, "/dashboard/properties");
   });
 }
@@ -236,6 +237,8 @@ export async function deleteProperty(
       where: { id },
       select: { name: true },
     });
+    // Capture the public paths before the row disappears.
+    await revalidateProperty(id);
     await prisma.property.delete({ where: { id } });
     await recordAudit(actor.id, "property.delete", "Property", property.id);
     revalidatePath("/dashboard/properties");

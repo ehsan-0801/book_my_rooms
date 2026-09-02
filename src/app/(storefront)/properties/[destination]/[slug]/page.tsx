@@ -26,20 +26,29 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { amenityName } from "@/lib/amenities";
-import { bdt, ratingLabel } from "@/lib/format";
-import { PROPERTIES, getProperty, lowestRate } from "@/lib/properties";
-import { getDestination } from "@/lib/destinations";
+import { bdt, lowestRate, ratingLabel } from "@/lib/format";
+import {
+  getDestination,
+  getPropertyBySlug,
+  listPublicPropertyPaths,
+} from "@/lib/queries/storefront";
 
-export function generateStaticParams() {
-  return PROPERTIES.map((p) => ({ destination: p.destinationSlug, slug: p.slug }));
+// Only published listings from approved vendors are pre-rendered; anything
+// else 404s until it is approved.
+export async function generateStaticParams() {
+  return listPublicPropertyPaths();
 }
+
+// A listing's price, availability and reviews change, so pages refresh
+// periodically rather than being frozen at build time.
+export const revalidate = 300;
+export const dynamicParams = true;
 
 export async function generateMetadata({
   params,
 }: PageProps<"/properties/[destination]/[slug]">): Promise<Metadata> {
   const { slug } = await params;
-  const property = getProperty(slug);
+  const property = await getPropertyBySlug(slug);
   if (!property) return { title: "Property not found" };
 
   return {
@@ -60,10 +69,10 @@ export default async function PropertyPage({
   params,
 }: PageProps<"/properties/[destination]/[slug]">) {
   const { slug } = await params;
-  const property = getProperty(slug);
+  const property = await getPropertyBySlug(slug);
   if (!property) notFound();
 
-  const destination = getDestination(property.destinationSlug);
+  const destination = await getDestination(property.destinationSlug);
   const distribution = ratingDistribution(property.reviews.map((r) => r.rating));
 
   return (
@@ -197,10 +206,10 @@ export default async function PropertyPage({
               Amenities
             </h2>
             <ul className="mt-4 grid gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
-              {property.amenities.map((slug) => (
-                <li key={slug} className="flex items-center gap-2.5 text-sm">
-                  <AmenityIcon slug={slug} className="text-primary" />
-                  {amenityName(slug)}
+              {property.amenities.map((amenity) => (
+                <li key={amenity.slug} className="flex items-center gap-2.5 text-sm">
+                  <AmenityIcon icon={amenity.icon} className="text-primary" />
+                  {amenity.name}
                 </li>
               ))}
             </ul>

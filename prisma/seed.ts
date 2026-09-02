@@ -9,9 +9,9 @@ import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "../src/generated/prisma/client";
-import { DESTINATIONS } from "../src/lib/destinations";
-import { PROPERTIES } from "../src/lib/properties";
-import { AMENITIES, PROPERTY_TYPES } from "../src/lib/amenities";
+import { DESTINATIONS } from "./fixtures/destinations";
+import { PROPERTIES } from "./fixtures/properties";
+import { AMENITIES, PROPERTY_TYPES } from "./fixtures/taxonomy";
 
 const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL,
@@ -73,6 +73,9 @@ async function main() {
         tagline: d.tagline,
         isPopular: true,
         divisionId: divisions.get(d.division)!,
+        imageAuthor: d.credit.author,
+        imageLicense: d.credit.license,
+        imageSource: d.credit.source,
       },
       create: {
         slug: d.slug,
@@ -81,6 +84,9 @@ async function main() {
         tagline: d.tagline,
         isPopular: true,
         divisionId: divisions.get(d.division)!,
+        imageAuthor: d.credit.author,
+        imageLicense: d.credit.license,
+        imageSource: d.credit.source,
       },
     });
     districts.set(d.slug, row.id);

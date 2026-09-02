@@ -21,7 +21,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { DESTINATIONS } from "@/lib/destinations";
 import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -37,7 +36,15 @@ const today = () => {
   return d;
 };
 
+export interface DestinationOption {
+  slug: string;
+  name: string;
+  division: string;
+}
+
 export interface SearchBarProps {
+  /** Destinations come from the database, so the server passes them in. */
+  destinations: DestinationOption[];
   /** "hero" floats on photography; "inline" sits on a page background. */
   variant?: "hero" | "inline";
   defaultDestination?: string;
@@ -45,6 +52,7 @@ export interface SearchBarProps {
 }
 
 export function SearchBar({
+  destinations,
   variant = "hero",
   defaultDestination = "",
   className,
@@ -117,7 +125,7 @@ export function SearchBar({
               </span>
             </SelectTrigger>
             <SelectContent>
-              {DESTINATIONS.map((d) => (
+              {destinations.map((d) => (
                 <SelectItem key={d.slug} value={d.slug}>
                   {d.name}
                   <span className="ml-1 text-muted-foreground">· {d.division}</span>

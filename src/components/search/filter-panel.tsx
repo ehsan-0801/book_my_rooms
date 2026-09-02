@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { AmenityIcon } from "@/components/property/amenity-icon";
-import { CATEGORIES, FILTER_AMENITIES, PROPERTY_TYPES } from "@/lib/amenities";
+import type { AmenityRef } from "@/lib/types";
+import { CATEGORIES } from "@/lib/amenities";
 import { bdt } from "@/lib/format";
 import { PRICE_CEILING, PRICE_FLOOR } from "@/lib/search";
 import { cn } from "@/lib/utils";
@@ -23,10 +24,15 @@ interface Counts {
 
 export function FilterPanel({
   counts,
+  types,
+  amenities,
   className,
   onApplied,
 }: {
   counts: Counts;
+  /** Admin-editable vocabulary, passed in from the server. */
+  types: { slug: string; name: string; icon: string | null }[];
+  amenities: AmenityRef[];
   className?: string;
   onApplied?: () => void;
 }) {
@@ -134,13 +140,13 @@ export function FilterPanel({
 
       {/* Property type — SRS §9.3 */}
       <FilterGroup legend="Property type">
-        {PROPERTY_TYPES.map((t) => (
+        {types.map((t) => (
           <FilterRow
             key={t.slug}
             id={`type-${t.slug}`}
             checked={list("type").includes(t.slug)}
             onCheckedChange={() => toggle("type", t.slug)}
-            label={t.label}
+            label={t.name}
             count={counts.type[t.slug] ?? 0}
           />
         ))}
@@ -188,7 +194,7 @@ export function FilterPanel({
 
       {/* Amenities — SRS §9.5 */}
       <FilterGroup legend="Amenities">
-        {FILTER_AMENITIES.map((a) => (
+        {amenities.map((a) => (
           <FilterRow
             key={a.slug}
             id={`am-${a.slug}`}
@@ -196,7 +202,7 @@ export function FilterPanel({
             onCheckedChange={() => toggle("amenities", a.slug)}
             label={
               <span className="flex items-center gap-2">
-                <AmenityIcon slug={a.slug} className="size-4 text-muted-foreground" />
+                <AmenityIcon icon={a.icon} className="size-4 text-muted-foreground" />
                 {a.name}
               </span>
             }

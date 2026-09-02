@@ -20,7 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { applyDiscount, bdt, formatDateLong, nightsBetween } from "@/lib/format";
-import { getProperty } from "@/lib/properties";
+import { getPropertyBySlug } from "@/lib/queries/storefront";
 
 export const metadata: Metadata = {
   title: "Booking confirmed",
@@ -56,7 +56,7 @@ export default async function BookingConfirmationPage({
   const { reference } = await params;
   const sp = await searchParams;
 
-  const property = getProperty(one(sp.property) ?? "");
+  const property = await getPropertyBySlug(one(sp.property) ?? "");
   if (!property) notFound();
 
   const room = property.rooms.find((r) => r.slug === one(sp.room)) ?? property.rooms[0];

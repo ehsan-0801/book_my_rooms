@@ -4,7 +4,7 @@ import { TicketPercent } from "lucide-react";
 import { PropertyCard } from "@/components/property/property-card";
 import { Section, SectionHeader } from "@/components/site/section";
 import { Badge } from "@/components/ui/badge";
-import { discountedProperties } from "@/lib/properties";
+import { getDiscountedProperties } from "@/lib/queries/storefront";
 
 export const metadata: Metadata = {
   title: "Special offers",
@@ -27,8 +27,10 @@ const CAMPAIGNS = [
   },
 ];
 
-export default function OffersPage() {
-  const offers = discountedProperties();
+export const revalidate = 300;
+
+export default async function OffersPage() {
+  const offers = await getDiscountedProperties();
 
   return (
     <>

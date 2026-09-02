@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { Logo } from "./logo";
 import { NewsletterForm } from "./newsletter-form";
-import { DESTINATIONS } from "@/lib/destinations";
+import { listDestinations } from "@/lib/queries/storefront";
 
 const COLUMNS = [
   {
@@ -55,7 +55,9 @@ const YoutubeGlyph = ({ className }: GlyphProps) => (
   </svg>
 );
 
-export function SiteFooter() {
+export async function SiteFooter() {
+  // Popular destinations in the footer track the live catalogue.
+  const destinations = await listDestinations(true);
   return (
     <footer className="mt-auto border-t bg-secondary/40">
       <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
@@ -139,7 +141,7 @@ export function SiteFooter() {
         <div className="mt-10 border-t pt-8">
           <h3 className="text-sm font-semibold">Popular destinations</h3>
           <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-2">
-            {DESTINATIONS.map((d) => (
+            {destinations.map((d) => (
               <li key={d.slug}>
                 <Link
                   href={`/destinations/${d.slug}`}

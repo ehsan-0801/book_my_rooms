@@ -5,6 +5,10 @@ import { z } from "zod";
 
 import { prisma } from "@/lib/prisma";
 import { recordAudit, requireAdminActor } from "@/lib/rbac";
+import {
+  revalidateProperty,
+  revalidateVendorProperties,
+} from "@/lib/revalidate";
 import { fail, guard, ok, warn, type ActionResult } from "./result";
 
 /* Admin mutations. Every one re-checks the caller's role server-side — the
@@ -42,6 +46,8 @@ export async function setVendorStatus(
     }
 
     await recordAudit(admin.id, `vendor.${status.toLowerCase()}`, "Vendor", id, { status });
+    // A status change moves their listings in or out of public search.
+    await revalidateVendorProperties(id);
     revalidatePath("/dashboard/vendors");
     revalidatePath("/dashboard");
 
@@ -81,6 +87,7 @@ export async function setPropertyStatus(
     });
 
     await recordAudit(admin.id, `property.${status.toLowerCase()}`, "Property", id, { status });
+    await revalidateProperty(id);
     revalidatePath("/dashboard/properties");
     revalidatePath("/dashboard");
 
@@ -114,8 +121,8 @@ export async function togglePropertyFeatured(
 
     await prisma.property.update({ where: { id }, data: { isFeatured: next } });
     await recordAudit(admin.id, "property.feature", "Property", id, { isFeatured: next });
+    await revalidateProperty(id);
     revalidatePath("/dashboard/properties");
-    revalidatePath("/");
 
     return ok(
       next
@@ -161,6 +168,8 @@ export async function moderateReview(
     });
 
     await recordAudit(admin.id, isApproved ? "review.approve" : "review.reject", "Review", id);
+    // Moderation changes the property's public rating and review list.
+    await revalidateProperty(review.propertyId);
     revalidatePath("/dashboard/reviews");
 
     return ok(isApproved ? "Review published" : "Review hidden from the listing");

@@ -16,19 +16,26 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { DESTINATIONS, getDestination } from "@/lib/destinations";
+import {
+  getDestination,
+  getPropertiesInDestination,
+  listDestinations,
+} from "@/lib/queries/storefront";
 import { bdt } from "@/lib/format";
-import { propertiesIn } from "@/lib/properties";
 
-export function generateStaticParams() {
-  return DESTINATIONS.map((d) => ({ slug: d.slug }));
+export async function generateStaticParams() {
+  const destinations = await listDestinations();
+  return destinations.map((d) => ({ slug: d.slug }));
 }
+
+export const revalidate = 600;
+export const dynamicParams = true;
 
 export async function generateMetadata({
   params,
 }: PageProps<"/destinations/[slug]">): Promise<Metadata> {
   const { slug } = await params;
-  const d = getDestination(slug);
+  const d = await getDestination(slug);
   if (!d) return { title: "Destination not found" };
   return {
     title: `Hotels & resorts in ${d.name}`,
@@ -42,10 +49,13 @@ export default async function DestinationPage({
   params,
 }: PageProps<"/destinations/[slug]">) {
   const { slug } = await params;
-  const destination = getDestination(slug);
+  const destination = await getDestination(slug);
   if (!destination) notFound();
 
-  const properties = propertiesIn(destination.slug);
+  const [properties, allDestinations] = await Promise.all([
+    getPropertiesInDestination(destination.slug),
+    listDestinations(),
+  ]);
 
   return (
     <>
@@ -107,6 +117,7 @@ export default async function DestinationPage({
           </p>
 
           <SearchBar
+            destinations={allDestinations}
             className="mt-8"
             defaultDestination={destination.slug}
           />

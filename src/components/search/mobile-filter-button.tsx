@@ -14,9 +14,13 @@ import { FilterPanel } from "./filter-panel";
 
 export function MobileFilterButton({
   counts,
+  types,
+  amenities,
   activeCount,
 }: {
   counts: React.ComponentProps<typeof FilterPanel>["counts"];
+  types: React.ComponentProps<typeof FilterPanel>["types"];
+  amenities: React.ComponentProps<typeof FilterPanel>["amenities"];
   activeCount: number;
 }) {
   const [open, setOpen] = useState(false);
@@ -39,7 +43,12 @@ export function MobileFilterButton({
           <SheetTitle>Filters</SheetTitle>
         </SheetHeader>
         <div className="p-5">
-          <FilterPanel counts={counts} onApplied={() => setOpen(false)} />
+          <FilterPanel
+            counts={counts}
+            types={types}
+            amenities={amenities}
+            onApplied={() => setOpen(false)}
+          />
         </div>
       </SheetContent>
     </Sheet>

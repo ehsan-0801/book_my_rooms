@@ -27,6 +27,16 @@ export interface Amenity {
   icon: string;
 }
 
+/**
+ * Amenities are admin-editable rows, so their label and icon travel with the
+ * data rather than being resolved from a hardcoded map in the component.
+ */
+export interface AmenityRef {
+  slug: string;
+  name: string;
+  icon: string | null;
+}
+
 export interface Destination {
   slug: string;
   name: string;
@@ -60,7 +70,7 @@ export interface Room {
   discountPercent?: number;
   breakfastIncluded: boolean;
   isRefundable: boolean;
-  amenities: string[];
+  amenities: AmenityRef[];
 }
 
 export interface Review {
@@ -103,7 +113,7 @@ export interface Property {
   discountPercent?: number;
   isFeatured: boolean;
   isPremium: boolean;
-  amenities: string[];
+  amenities: AmenityRef[];
   rooms: Room[];
   reviews: Review[];
   nearby: NearbyAttraction[];

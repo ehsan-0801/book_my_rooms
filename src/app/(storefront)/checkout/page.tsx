@@ -5,7 +5,7 @@ import { ArrowLeft } from "lucide-react";
 
 import { CheckoutForm } from "@/components/checkout/checkout-form";
 import { Button } from "@/components/ui/button";
-import { getProperty } from "@/lib/properties";
+import { getPropertyBySlug } from "@/lib/queries/storefront";
 
 export const metadata: Metadata = {
   title: "Secure checkout",
@@ -28,7 +28,7 @@ function parseDate(value: string | undefined, fallbackOffsetDays: number) {
 export default async function CheckoutPage({ searchParams }: PageProps<"/checkout">) {
   const sp = await searchParams;
 
-  const property = getProperty(one(sp.property) ?? "");
+  const property = await getPropertyBySlug(one(sp.property) ?? "");
   if (!property) notFound();
 
   const room =
