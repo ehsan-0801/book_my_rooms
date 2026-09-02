@@ -168,6 +168,11 @@ placeholder in `.env.prod` must not be reused, or session cookies can be forged.
 > `prisma` is pinned to `7.10.0`. The `latest` dist-tag on npm currently points
 > at an `8.0.0-rc`, so don't run `npm update prisma` without checking.
 
+Connection strings use `sslmode=verify-full`, not `require`. Today `pg` treats
+them identically, but from `pg` v9 `require` adopts libpq semantics — encrypt
+without verifying the server certificate — so leaving it would silently weaken
+the production connection on a routine dependency upgrade.
+
 Prisma 7 keeps the connection URL in [`prisma.config.ts`](./prisma.config.ts)
 rather than the schema, and the client connects through `@prisma/adapter-pg`.
 Migrations use the **unpooled** Neon URL — pgbouncer can't hold the advisory
