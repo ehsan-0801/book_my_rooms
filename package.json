@@ -6,7 +6,7 @@
     "dev": "next dev --port 3021",
     "prebuild": "prisma generate",
     "build": "next build",
-    "start": "next start",
+    "start": "next start --port ${PORT:-3021}",
     "lint": "eslint"
   },
   "dependencies": {

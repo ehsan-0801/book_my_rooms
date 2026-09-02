@@ -17,6 +17,7 @@ cp .env.example .env      # then fill in your own credentials
 npx prisma migrate deploy # or `migrate dev` in development
 npx prisma db seed        # optional demo catalogue + bookings
 npm run dev               # http://localhost:3021
+npm run build && npm start  # production, also on 3021
 ```
 
 ### Demo accounts
@@ -122,7 +123,7 @@ cards-on-mobile split as `DataTable`, so nothing jumps when data lands.
 
 > Loading boundaries only appear on client navigation when the route was
 > prefetched, and **Next disables prefetching in development**. Verify skeletons
-> against `npm run build && npx next start`, not `npm run dev`.
+> against `npm run build && npm start`, not `npm run dev`.
 
 ---
 
