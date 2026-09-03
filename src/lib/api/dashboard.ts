@@ -821,7 +821,10 @@ export const RESOURCES = {
       const rooms = await prisma.room.findMany({
         where: actor.role === "ADMIN" ? {} : { property: vendorScope(actor) },
         orderBy: [{ property: { name: "asc" } }, { name: "asc" }],
-        select: { id: true, name: true, totalUnits: true, property: { select: { name: true } } },
+        select: {
+          id: true, name: true, totalUnits: true, basePrice: true,
+          property: { select: { name: true } },
+        },
       });
 
       const roomId = one(searchParams, "room") ?? rooms[0]?.id;
@@ -834,12 +837,11 @@ export const RESOURCES = {
       const from = new Date();
       from.setUTCHours(0, 0, 0, 0);
       const to = new Date(from);
-      to.setUTCDate(to.getUTCDate() + 42);
+      to.setUTCDate(to.getUTCDate() + 60);
 
       const nights = await prisma.roomAvailability.findMany({
         where: { roomId, date: { gte: from, lt: to } },
         orderBy: { date: "asc" },
-        select: { id: true, date: true, unitsOpen: true, price: true, isClosed: true },
       });
       return { rooms, roomId, nights };
     },
