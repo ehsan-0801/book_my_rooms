@@ -8,6 +8,7 @@ import {
 } from "@/components/dashboard/form";
 import { ActionForm } from "@/components/dashboard/action-form";
 import type { ActionResult } from "@/lib/actions/result";
+import { toDate, type DateLike } from "@/lib/format";
 
 export interface CouponFormData {
   id?: string;
@@ -18,12 +19,14 @@ export interface CouponFormData {
   maxDiscount?: number | null;
   minSpend?: number | null;
   usageLimit?: number | null;
-  startsAt?: Date;
-  endsAt?: Date;
+  startsAt?: DateLike;
+  endsAt?: DateLike;
   isActive?: boolean;
 }
 
-const asDateInput = (d?: Date) => (d ? d.toISOString().slice(0, 10) : "");
+/** Accepts a Date or the ISO string the API returns. */
+const asDateInput = (d?: DateLike | null) =>
+  d ? toDate(d).toISOString().slice(0, 10) : "";
 
 export function CouponForm({
   action,

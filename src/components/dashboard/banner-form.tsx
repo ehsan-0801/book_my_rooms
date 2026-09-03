@@ -9,6 +9,7 @@ import { ImageUploader } from "@/components/dashboard/image-uploader";
 import { Label } from "@/components/ui/label";
 import { ActionForm } from "@/components/dashboard/action-form";
 import type { ActionResult } from "@/lib/actions/result";
+import { toDate, type DateLike } from "@/lib/format";
 
 export interface BannerFormData {
   id?: string;
@@ -18,11 +19,13 @@ export interface BannerFormData {
   position?: string;
   sortOrder?: number;
   isActive?: boolean;
-  startsAt?: Date | null;
-  endsAt?: Date | null;
+  startsAt?: DateLike | null;
+  endsAt?: DateLike | null;
 }
 
-const asDateInput = (d?: Date | null) => (d ? d.toISOString().slice(0, 10) : "");
+/** Accepts a Date or the ISO string the API returns. */
+const asDateInput = (d?: DateLike | null) =>
+  d ? toDate(d).toISOString().slice(0, 10) : "";
 
 export function BannerForm({
   action,
