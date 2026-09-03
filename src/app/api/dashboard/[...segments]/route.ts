@@ -1,5 +1,6 @@
 import { RESOURCES, isResource } from "@/lib/api/dashboard";
 import { apiError, route } from "@/lib/api/handler";
+import type { Role } from "@/lib/rbac";
 
 /**
  * Serves every dashboard read.
@@ -36,7 +37,9 @@ export const GET = route<{ segments: string[] }>({
     if (!isResource(name)) return apiError(`Unknown resource: ${name}`, 404);
 
     const resource = RESOURCES[name];
-    if (!resource.roles.includes(actor.role)) {
+    // `satisfies` narrows each entry's roles to a literal tuple; widen to
+    // compare against the caller's role.
+    if (!(resource.roles as Role[]).includes(actor.role)) {
       return apiError("You don't have permission to view that", 403);
     }
 

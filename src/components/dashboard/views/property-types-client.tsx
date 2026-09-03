@@ -1,0 +1,130 @@
+"use client";
+
+import Link from "next/link";
+import { Pencil, Plus } from "lucide-react";
+
+import { DataTable, type Column } from "@/components/dashboard/data-table";
+import { DeleteDialog } from "@/components/dashboard/delete-dialog";
+import { EmptyState, PageHeader } from "@/components/dashboard/ui";
+import { AmenityIcon } from "@/components/property/amenity-icon";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { deletePropertyType } from "@/lib/actions/catalog";
+
+
+type Row = PropertyTypeRow;
+import { PageHeaderSkeleton, TableSkeleton } from "@/components/dashboard/skeletons";
+import { useApi } from "@/lib/api/client";
+import type { ResourceData } from "@/lib/api/dashboard";
+
+export function PropertyTypesClient() {
+  const { data, loading } = useApi<ViewData>("/api/dashboard/property-types");
+
+  if (loading || !data) {
+    return (
+      <div className="space-y-6">
+        <PageHeaderSkeleton />
+        <TableSkeleton rows={7} columns={6} />
+      </div>
+    );
+  }
+
+  return <PropertyTypesView data={data} />;
+}
+
+/** Inferred from the resource loader, so the view cannot drift from the query. */
+type ViewData = ResourceData<"property-types">;
+type PropertyTypeRow = ViewData[number];
+
+function PropertyTypesView({ data: types }: { data: ViewData }) {
+
+  const columns: Column<Row>[] = [
+    {
+      key: "name",
+      header: "Type",
+      mobile: "title",
+      cell: (t) => (
+        <span className="flex items-center gap-2.5 font-medium">
+          <AmenityIcon icon={t.icon} className="text-primary" />
+          {t.name}
+        </span>
+      ),
+    },
+    {
+      key: "slug",
+      header: "Slug",
+      mobile: "body",
+      cell: (t) => <span className="font-mono text-xs text-muted-foreground">{t.slug}</span>,
+    },
+    {
+      key: "order",
+      header: "Order",
+      mobile: "body",
+      cell: (t) => <span className="tabular-nums">{t.sortOrder}</span>,
+    },
+    {
+      key: "usage",
+      header: "Properties",
+      mobile: "body",
+      cell: (t) => <span className="tabular-nums">{t._count.properties}</span>,
+    },
+    {
+      key: "status",
+      header: "Status",
+      mobile: "meta",
+      cell: (t) => (
+        <Badge className={t.isActive ? "bg-success text-white" : "bg-muted text-muted-foreground"}>
+          {t.isActive ? "Active" : "Hidden"}
+        </Badge>
+      ),
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      align: "right",
+      mobile: "footer",
+      cell: (t) => (
+        <div className="flex flex-wrap justify-end gap-1 md:flex-nowrap">
+          <Button asChild size="sm" variant="outline">
+            <Link href={`/dashboard/property-types/${t.id}/edit`}>
+              <Pencil className="size-3.5" aria-hidden />
+              Edit
+            </Link>
+          </Button>
+          <DeleteDialog
+            action={deletePropertyType}
+            id={t.id}
+            title={`Delete ${t.name}`}
+            description="Types still used by a property can't be deleted — reassign those listings first."
+            iconOnly
+          />
+        </div>
+      ),
+    },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="Property types"
+        description="The accommodation categories vendors can list under (SRS §7.1)."
+        action={
+          <Button asChild>
+            <Link href="/dashboard/property-types/new">
+              <Plus aria-hidden />
+              New type
+            </Link>
+          </Button>
+        }
+      />
+      <DataTable
+        columns={columns}
+        rows={types}
+        rowKey={(t) => t.id}
+        caption="Property types"
+        empty={<EmptyState icon="Building2" title="No property types yet" />}
+      />
+    </div>
+  );
+}
+

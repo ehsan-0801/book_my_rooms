@@ -35,7 +35,7 @@ const vendorScope = (actor: Actor) =>
 
 const one = (sp: URLSearchParams, key: string) => sp.get(key) ?? undefined;
 
-export const RESOURCES: Record<string, Resource> = {
+export const RESOURCES = {
   /* ------------------------------------------------------------- overview */
   overview: {
     roles: ["ADMIN", "VENDOR", "CUSTOMER"],
@@ -306,16 +306,34 @@ export const RESOURCES: Record<string, Resource> = {
   /* ------------------------------------------------------------ customers */
   customers: {
     roles: ["ADMIN"],
-    load: async () =>
-      prisma.user.findMany({
-        where: { role: "CUSTOMER" },
-        orderBy: { createdAt: "desc" },
-        select: {
-          id: true, name: true, email: true, phone: true, isActive: true,
-          createdAt: true,
-          _count: { select: { bookings: true, reviews: true, wishlist: true } },
-        },
-      }),
+    load: async () => {
+      const [customers, spend] = await Promise.all([
+        prisma.user.findMany({
+          where: { role: "CUSTOMER" },
+          orderBy: { createdAt: "desc" },
+          select: {
+            id: true, name: true, email: true, phone: true, isActive: true,
+            createdAt: true,
+            _count: { select: { bookings: true, reviews: true, wishlist: true } },
+          },
+        }),
+        prisma.booking.groupBy({
+          by: ["userId"],
+          where: { status: { in: ["CONFIRMED", "COMPLETED"] } },
+          _sum: { grandTotal: true },
+        }),
+      ]);
+
+      return {
+        customers,
+        // Lifetime spend per customer, keyed for the table.
+        spend: Object.fromEntries(
+          spend
+            .filter((s) => s.userId)
+            .map((s) => [s.userId!, Number(s._sum?.grandTotal ?? 0)]),
+        ) as Record<string, number>,
+      };
+    },
   },
 
   "customers/detail": {
@@ -559,12 +577,15 @@ export const RESOURCES: Record<string, Resource> = {
   },
 
   /* ------------------------------------------------------------ catalogue */
+  "coupons/detail": {
+    roles: ["ADMIN"],
+    load: async ({ id }) => prisma.coupon.findUniqueOrThrow({ where: { id: id! } }),
+  },
+
   coupons: {
     roles: ["ADMIN"],
-    load: async ({ id }) =>
-      id
-        ? prisma.coupon.findUniqueOrThrow({ where: { id } })
-        : prisma.coupon.findMany({
+    load: async () =>
+      prisma.coupon.findMany({
             orderBy: [{ isActive: "desc" }, { endsAt: "desc" }],
             select: {
               id: true, code: true, description: true, type: true, value: true,
@@ -575,26 +596,36 @@ export const RESOURCES: Record<string, Resource> = {
           }),
   },
 
+  "banners/detail": {
+    roles: ["ADMIN"],
+    load: async ({ id }) => prisma.banner.findUniqueOrThrow({ where: { id: id! } }),
+  },
+
   banners: {
     roles: ["ADMIN"],
-    load: async ({ id }) =>
-      id
-        ? prisma.banner.findUniqueOrThrow({ where: { id } })
-        : prisma.banner.findMany({ orderBy: [{ position: "asc" }, { sortOrder: "asc" }] }),
+    load: async () =>
+      prisma.banner.findMany({ orderBy: [{ position: "asc" }, { sortOrder: "asc" }] }),
+  },
+
+  "destinations/detail": {
+    roles: ["ADMIN"],
+    load: async ({ id }) => {
+      const [divisions, district] = await Promise.all([
+        prisma.division.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+        prisma.district.findUnique({ where: { id: id! } }),
+      ]);
+      if (!district) throw new Error("Destination not found");
+      return { divisions, district };
+    },
   },
 
   destinations: {
     roles: ["ADMIN"],
-    load: async ({ id }) => {
+    load: async () => {
       const divisions = await prisma.division.findMany({
         orderBy: { name: "asc" },
         select: { id: true, name: true },
       });
-      if (id) {
-        const district = await prisma.district.findUnique({ where: { id } });
-        if (!district) throw new Error("Destination not found");
-        return { divisions, district };
-      }
       const districts = await prisma.district.findMany({
         orderBy: { name: "asc" },
         select: {
@@ -626,12 +657,15 @@ export const RESOURCES: Record<string, Resource> = {
     },
   },
 
+  "property-types/detail": {
+    roles: ["ADMIN"],
+    load: async ({ id }) => prisma.propertyType.findUniqueOrThrow({ where: { id: id! } }),
+  },
+
   "property-types": {
     roles: ["ADMIN"],
-    load: async ({ id }) =>
-      id
-        ? prisma.propertyType.findUniqueOrThrow({ where: { id } })
-        : prisma.propertyType.findMany({
+    load: async () =>
+      prisma.propertyType.findMany({
             orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
             select: {
               id: true, name: true, slug: true, icon: true, sortOrder: true,
@@ -640,12 +674,15 @@ export const RESOURCES: Record<string, Resource> = {
           }),
   },
 
+  "amenities/detail": {
+    roles: ["ADMIN"],
+    load: async ({ id }) => prisma.amenity.findUniqueOrThrow({ where: { id: id! } }),
+  },
+
   amenities: {
     roles: ["ADMIN"],
-    load: async ({ id }) =>
-      id
-        ? prisma.amenity.findUniqueOrThrow({ where: { id } })
-        : prisma.amenity.findMany({
+    load: async () =>
+      prisma.amenity.findMany({
             orderBy: { name: "asc" },
             select: {
               id: true, name: true, slug: true, icon: true, category: true,
@@ -654,12 +691,14 @@ export const RESOURCES: Record<string, Resource> = {
           }),
   },
 
+  "pages/detail": {
+    roles: ["ADMIN"],
+    load: async ({ id }) => prisma.contentPage.findUniqueOrThrow({ where: { id: id! } }),
+  },
+
   pages: {
     roles: ["ADMIN"],
-    load: async ({ id }) =>
-      id
-        ? prisma.contentPage.findUniqueOrThrow({ where: { id } })
-        : prisma.contentPage.findMany({ orderBy: { updatedAt: "desc" } }),
+    load: async () => prisma.contentPage.findMany({ orderBy: { updatedAt: "desc" } }),
   },
 
   /* -------------------------------------------------------------- content */
@@ -784,6 +823,14 @@ export const RESOURCES: Record<string, Resource> = {
       return { user, vendor };
     },
   },
-};
+} satisfies Record<string, Resource>;
 
-export const isResource = (name: string) => Object.hasOwn(RESOURCES, name);
+export type ResourceName = keyof typeof RESOURCES;
+
+/** The exact payload a resource returns, for the view that renders it. */
+export type ResourceData<K extends ResourceName> = Awaited<
+  ReturnType<(typeof RESOURCES)[K]["load"]>
+>;
+
+export const isResource = (name: string): name is ResourceName =>
+  Object.hasOwn(RESOURCES, name);
