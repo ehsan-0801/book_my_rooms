@@ -1,8 +1,12 @@
+"use client";
+
 import Link from "next/link";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { Logo } from "./logo";
 import { NewsletterForm } from "./newsletter-form";
-import { listDestinations } from "@/lib/queries/storefront";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useApi } from "@/lib/api/client";
+import type { Destination } from "@/lib/types";
 
 const COLUMNS = [
   {
@@ -55,9 +59,11 @@ const YoutubeGlyph = ({ className }: GlyphProps) => (
   </svg>
 );
 
-export async function SiteFooter() {
+export function SiteFooter() {
   // Popular destinations in the footer track the live catalogue.
-  const destinations = await listDestinations(true);
+  const { data: destinations } = useApi<Destination[]>(
+    "/api/storefront/destinations?popular=true",
+  );
   return (
     <footer className="mt-auto border-t bg-secondary/40">
       <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
@@ -140,18 +146,26 @@ export async function SiteFooter() {
 
         <div className="mt-10 border-t pt-8">
           <h3 className="text-sm font-semibold">Popular destinations</h3>
-          <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-2">
-            {destinations.map((d) => (
-              <li key={d.slug}>
-                <Link
-                  href={`/destinations/${d.slug}`}
-                  className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  Hotels in {d.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
+          {destinations ? (
+            <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-2">
+              {destinations.map((d) => (
+                <li key={d.slug}>
+                  <Link
+                    href={`/destinations/${d.slug}`}
+                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    Hotels in {d.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {Array.from({ length: 6 }, (_, i) => (
+                <Skeleton key={i} className="h-4 w-24" />
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="mt-8 flex flex-col gap-4 border-t pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
