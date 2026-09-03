@@ -1,5 +1,6 @@
 /** Bangladeshi Taka. The ৳ sign sits tight against the number in local usage. */
-export function bdt(amount: number, opts: { compact?: boolean } = {}) {
+export function bdt(amount: number | string, opts: { compact?: boolean } = {}) {
+  amount = typeof amount === "string" ? Number(amount) : amount;
   if (opts.compact && amount >= 1000) {
     const k = amount / 1000;
     return `৳${k % 1 === 0 ? k : k.toFixed(1)}k`;
@@ -7,8 +8,18 @@ export function bdt(amount: number, opts: { compact?: boolean } = {}) {
   return `৳${new Intl.NumberFormat("en-BD", { maximumFractionDigits: 0 }).format(amount)}`;
 }
 
-export function nightsBetween(checkIn: Date, checkOut: Date) {
-  const ms = checkOut.getTime() - checkIn.getTime();
+/**
+ * Dates arrive as `Date` from a server component and as an ISO string once the
+ * same row has crossed an API boundary as JSON. Every date helper accepts both
+ * so a component doesn't have to know where its data came from.
+ */
+export type DateLike = Date | string | number;
+
+export const toDate = (value: DateLike): Date =>
+  value instanceof Date ? value : new Date(value);
+
+export function nightsBetween(checkIn: DateLike, checkOut: DateLike) {
+  const ms = toDate(checkOut).getTime() - toDate(checkIn).getTime();
   return Math.max(1, Math.round(ms / 86_400_000));
 }
 
@@ -24,10 +35,10 @@ const DATE_FMT_LONG = new Intl.DateTimeFormat("en-GB", {
   year: "numeric",
 });
 
-export const formatDate = (d: Date) => DATE_FMT.format(d);
-export const formatDateLong = (d: Date) => DATE_FMT_LONG.format(d);
+export const formatDate = (d: DateLike) => DATE_FMT.format(toDate(d));
+export const formatDateLong = (d: DateLike) => DATE_FMT_LONG.format(toDate(d));
 
-export function formatStayRange(checkIn: Date, checkOut: Date) {
+export function formatStayRange(checkIn: DateLike, checkOut: DateLike) {
   return `${formatDate(checkIn)} – ${formatDate(checkOut)}`;
 }
 
