@@ -377,7 +377,7 @@ export const RESOURCES = {
   payments: {
     roles: ["ADMIN"],
     load: async () => {
-      const [payments, paid, refunded] = await Promise.all([
+      const [payments, paid, refunded, pendingRefunds] = await Promise.all([
         prisma.payment.findMany({
           orderBy: { createdAt: "desc" },
           take: 80,
@@ -393,7 +393,10 @@ export const RESOURCES = {
           },
         }),
         prisma.payment.aggregate({ where: { status: "PAID" }, _sum: { amount: true }, _count: { _all: true } }),
-        prisma.payment.aggregate({ where: { status: "REFUNDED" }, _sum: { amount: true }, _count: { _all: true } }),
+        prisma.refund.aggregate({ where: { status: "COMPLETED" }, _sum: { amount: true }, _count: { _all: true } }),
+        prisma.refund.count({
+          where: { status: { in: ["REQUESTED", "APPROVED", "PROCESSING"] } },
+        }),
       ]);
       return {
         payments,
@@ -401,6 +404,7 @@ export const RESOURCES = {
         paidCount: paid._count?._all ?? 0,
         refundedTotal: Number(refunded._sum?.amount ?? 0),
         refundedCount: refunded._count?._all ?? 0,
+        pendingRefunds,
       };
     },
   },
@@ -543,7 +547,7 @@ export const RESOURCES = {
             vendorPayout: true, status: true, earnedAt: true, createdAt: true,
             booking: {
               select: {
-                reference: true, checkOut: true,
+                id: true, reference: true, checkOut: true,
                 property: { select: { name: true } },
               },
             },
@@ -552,7 +556,7 @@ export const RESOURCES = {
         prisma.commission.groupBy({
           by: ["status"],
           where: { vendorId },
-          _sum: { vendorPayout: true, amount: true },
+          _sum: { vendorPayout: true, amount: true, baseAmount: true },
         }),
         prisma.payout.findMany({
           where: { vendorId },
@@ -568,6 +572,7 @@ export const RESOURCES = {
             {
               payout: Number(t._sum?.vendorPayout ?? 0),
               commission: Number(t._sum?.amount ?? 0),
+              base: Number(t._sum?.baseAmount ?? 0),
             },
           ]),
         ),
@@ -757,7 +762,8 @@ export const RESOURCES = {
           property: {
             select: {
               id: true, name: true, slug: true, basePrice: true, ratingAvg: true,
-              ratingCount: true, status: true,
+              ratingCount: true, status: true, shortDescription: true, category: true,
+              type: { select: { name: true } },
               district: { select: { name: true, slug: true } },
               images: { where: { isCover: true }, take: 1, select: { url: true, alt: true } },
             },
@@ -775,6 +781,7 @@ export const RESOURCES = {
         select: {
           id: true, name: true, basePrice: true, discountValue: true,
           property: { select: { name: true } },
+          images: { take: 1, orderBy: { sortOrder: "asc" }, select: { url: true } },
         },
       }),
   },
@@ -812,16 +819,22 @@ export const RESOURCES = {
   /* ------------------------------------------------------------- settings */
   settings: {
     roles: ["ADMIN", "VENDOR", "CUSTOMER"],
-    load: async ({ actor }) => {
-      const user = await prisma.user.findUniqueOrThrow({
+    // Vendor details are nested under the user, matching how the form reads them.
+    load: async ({ actor }) =>
+      prisma.user.findUniqueOrThrow({
         where: { id: actor.id },
-        select: { id: true, name: true, email: true, phone: true, avatarUrl: true, role: true },
-      });
-      const vendor = actor.vendorId
-        ? await prisma.vendor.findUnique({ where: { id: actor.vendorId } })
-        : null;
-      return { user, vendor };
-    },
+        select: {
+          id: true, name: true, email: true, phone: true, avatarUrl: true, role: true,
+          vendor: {
+            select: {
+              id: true, businessName: true, contactEmail: true, contactPhone: true,
+              address: true, tradeLicenseNo: true, tinNumber: true, bankName: true,
+              bankAccountName: true, bankAccountNo: true, status: true,
+              commissionRate: true,
+            },
+          },
+        },
+      }),
   },
 } satisfies Record<string, Resource>;
 
