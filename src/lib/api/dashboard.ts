@@ -92,7 +92,7 @@ export const RESOURCES = {
       const vendor = await prisma.vendor.findUnique({
         where: { id: id! },
         include: {
-          user: { select: { name: true, email: true, createdAt: true } },
+          user: { select: { name: true, email: true, phone: true, createdAt: true } },
           properties: {
             select: {
               id: true, name: true, slug: true, status: true, basePrice: true,
@@ -106,12 +106,15 @@ export const RESOURCES = {
       });
       if (!vendor) throw new Error("Vendor not found");
 
-      const commission = await prisma.commission.aggregate({
-        where: { vendorId: id! },
-        _sum: { amount: true, vendorPayout: true, baseAmount: true },
-        _count: { _all: true },
-      });
-      return { vendor, commission };
+      const [commission, bookingCount] = await Promise.all([
+        prisma.commission.aggregate({
+          where: { vendorId: id! },
+          _sum: { amount: true, vendorPayout: true, baseAmount: true },
+          _count: { _all: true },
+        }),
+        prisma.booking.count({ where: { property: { vendorId: id! } } }),
+      ]);
+      return { vendor, commission, bookingCount };
     },
   },
 
@@ -286,6 +289,7 @@ export const RESOURCES = {
             select: {
               name: true, slug: true, addressLine: true, checkInTime: true,
               checkOutTime: true, cancellationPolicy: true,
+              images: { where: { isCover: true }, take: 1, select: { url: true } },
               district: { select: { slug: true, name: true } },
               vendor: { select: { businessName: true, contactPhone: true } },
             },
@@ -343,7 +347,12 @@ export const RESOURCES = {
         where: { id: id!, role: "CUSTOMER" },
         select: {
           id: true, name: true, email: true, phone: true, isActive: true,
-          createdAt: true, avatarUrl: true,
+          createdAt: true, avatarUrl: true, emailVerified: true,
+          _count: { select: { bookings: true, reviews: true, wishlist: true } },
+          wishlist: {
+            take: 10,
+            select: { property: { select: { name: true, slug: true } } },
+          },
           bookings: {
             orderBy: { createdAt: "desc" },
             take: 20,
@@ -357,8 +366,9 @@ export const RESOURCES = {
             orderBy: { createdAt: "desc" },
             take: 10,
             select: {
-              id: true, rating: true, title: true, isApproved: true,
-              createdAt: true, property: { select: { name: true } },
+              id: true, rating: true, title: true, comment: true,
+              isApproved: true, createdAt: true,
+              property: { select: { name: true } },
             },
           },
         },
@@ -748,6 +758,25 @@ export const RESOURCES = {
           : [];
 
       return { reviews, reviewable, role: actor.role };
+    },
+  },
+
+  "reviews/detail": {
+    roles: ["ADMIN", "CUSTOMER"],
+    load: async ({ actor, id }) => {
+      const review = await prisma.review.findFirst({
+        where: {
+          id: id!,
+          ...(actor.role === "ADMIN" ? {} : { userId: actor.id }),
+        },
+        select: {
+          id: true, rating: true, title: true, comment: true, isApproved: true,
+          property: { select: { name: true } },
+          booking: { select: { reference: true } },
+        },
+      });
+      if (!review) throw new Error("Review not found");
+      return review;
     },
   },
 
