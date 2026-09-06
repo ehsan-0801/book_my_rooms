@@ -7,6 +7,10 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { progress } from "@/lib/progress";
+import {
+  UploadQueueProvider,
+  useUploadQueueValue,
+} from "@/components/dashboard/upload-queue";
 import type { ActionResult } from "@/lib/actions/result";
 import { cn } from "@/lib/utils";
 
@@ -48,6 +52,7 @@ export function ActionForm({
 } & Omit<React.ComponentProps<"form">, "action" | "onSubmit">) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const uploads = useUploadQueueValue();
 
   function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -56,6 +61,21 @@ export function ActionForm({
     progress.start();
     startTransition(async () => {
       try {
+        // Images chosen in this form are still only local previews; they're
+        // uploaded now, on the save the user just asked for. A failure here
+        // means nothing was stored, so the action must not run — otherwise the
+        // record would save with its images silently missing.
+        try {
+          for (const { name, value } of await uploads.flushAll()) {
+            formData.set(name, value);
+          }
+        } catch (error) {
+          toast.error(
+            error instanceof Error ? error.message : "Could not upload the images",
+          );
+          return;
+        }
+
         const result = await action(undefined, formData);
         announce(result);
         onResult?.(result);
@@ -72,9 +92,11 @@ export function ActionForm({
 
   return (
     <PendingContext.Provider value={pending}>
-      <form onSubmit={onSubmit} className={className} {...props}>
-        {children}
-      </form>
+      <UploadQueueProvider value={uploads}>
+        <form onSubmit={onSubmit} className={className} {...props}>
+          {children}
+        </form>
+      </UploadQueueProvider>
     </PendingContext.Provider>
   );
 }
