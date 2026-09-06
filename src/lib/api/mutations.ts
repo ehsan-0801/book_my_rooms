@@ -127,6 +127,7 @@ export const MUTATIONS: Record<string, MutationResource> = {
 
   divisions: {
     create: { roles: ADMIN, action: catalog.createDivision },
+    update: { roles: ADMIN, action: catalog.updateDivision },
     remove: { roles: ADMIN, action: catalog.deleteDivision },
   },
 

@@ -357,6 +357,35 @@ export async function createDivision(
   });
 }
 
+export async function updateDivision(
+  _prev: ActionResult | undefined,
+  formData: FormData,
+): Promise<ActionResult> {
+  return guard(async () => {
+    const actor = await requireAdminActor();
+    const id = String(formData.get("id") ?? "");
+    const parsed = z
+      .object({ name: z.string().min(2, "Enter a division name") })
+      .safeParse({ name: formData.get("name") });
+    if (!parsed.success) return fail("Enter a division name");
+
+    const slug = slugify(parsed.data.name);
+    const clash = await prisma.division.findFirst({
+      where: { NOT: { id }, OR: [{ name: parsed.data.name }, { slug }] },
+      select: { id: true },
+    });
+    if (clash) return fail("Another division already uses that name");
+
+    await prisma.division.update({
+      where: { id },
+      data: { name: parsed.data.name, slug },
+    });
+    await recordAudit(actor.id, "division.update", "Division", id);
+    revalidatePath("/dashboard/destinations");
+    return ok(`${parsed.data.name} saved`);
+  });
+}
+
 export async function deleteDivision(
   _prev: ActionResult | undefined,
   formData: FormData,

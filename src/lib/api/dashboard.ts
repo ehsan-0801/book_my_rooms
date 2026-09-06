@@ -634,6 +634,23 @@ export const RESOURCES = {
     },
   },
 
+  "divisions/detail": {
+    roles: ["ADMIN"],
+    load: async ({ id }) => prisma.division.findUniqueOrThrow({ where: { id: id! } }),
+  },
+
+  divisions: {
+    roles: ["ADMIN"],
+    load: async () =>
+      prisma.division.findMany({
+        orderBy: { name: "asc" },
+        select: {
+          id: true, name: true, slug: true,
+          _count: { select: { districts: true } },
+        },
+      }),
+  },
+
   destinations: {
     roles: ["ADMIN"],
     load: async () => {
