@@ -5,13 +5,17 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 
 import { Logo } from "@/components/site/logo";
+import { Button } from "@/components/ui/button";
+import { PanelLeft, PanelLeftClose } from "lucide-react";
 import { NavigationProgress } from "@/components/dashboard/navigation-progress";
 import { MobileSidebar } from "@/components/dashboard/mobile-sidebar";
 import { SidebarNav } from "@/components/dashboard/sidebar-nav";
+import { useSidebarCollapsed } from "@/components/dashboard/use-sidebar";
 import { UserMenu } from "@/components/dashboard/user-menu";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DASHBOARD_NAV, ROLE_LABEL } from "@/lib/dashboard-nav";
+import { cn } from "@/lib/utils";
 
 /**
  * The dashboard chrome — header, sidebar, user menu — driven entirely by the
@@ -25,6 +29,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
   const router = useRouter();
   const reloaded = useRef(false);
+  const { collapsed, toggle } = useSidebarCollapsed();
 
   useEffect(() => {
     if (status !== "unauthenticated") return;
@@ -61,6 +66,18 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         </Suspense>
         <div className="flex h-16 items-center gap-2 px-4 sm:px-6">
           <MobileSidebar sections={sections} />
+          {/* Small screens get the drawer above; this collapses the rail. */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="hidden lg:inline-flex"
+            onClick={toggle}
+            aria-expanded={!collapsed}
+            aria-controls="dashboard-sidebar"
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {collapsed ? <PanelLeft /> : <PanelLeftClose />}
+          </Button>
           <Logo className="hidden sm:inline-flex" />
           <Badge variant="secondary" className="ml-1 hidden md:inline-flex">
             {ROLE_LABEL[user.role]}
@@ -78,9 +95,15 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       </header>
 
       <div className="flex flex-1">
-        <aside className="hidden w-64 shrink-0 border-r lg:block">
-          <div className="sticky top-16 max-h-[calc(100svh-4rem)] overflow-y-auto p-3">
-            <SidebarNav sections={sections} />
+        <aside
+          id="dashboard-sidebar"
+          className={cn(
+            "hidden shrink-0 border-r transition-[width] duration-200 ease-out lg:block",
+            collapsed ? "w-[4.25rem]" : "w-64",
+          )}
+        >
+          <div className="sticky top-16 max-h-[calc(100svh-4rem)] overflow-x-hidden overflow-y-auto p-3">
+            <SidebarNav sections={sections} collapsed={collapsed} />
           </div>
         </aside>
 
@@ -94,6 +117,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
 /** Mirrors the real shell's geometry so nothing shifts once the session resolves. */
 function ShellSkeleton() {
+  const { collapsed } = useSidebarCollapsed();
   return (
     <div className="flex min-h-svh flex-col">
       <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur-md">
@@ -106,7 +130,12 @@ function ShellSkeleton() {
         </div>
       </header>
       <div className="flex flex-1">
-        <aside className="hidden w-64 shrink-0 border-r lg:block">
+        <aside
+          className={cn(
+            "hidden shrink-0 border-r lg:block",
+            collapsed ? "w-[4.25rem]" : "w-64",
+          )}
+        >
           <div className="space-y-2 p-3">
             {Array.from({ length: 6 }, (_, i) => (
               <Skeleton key={i} className="h-9 w-full rounded-lg" />
