@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 
 import { Logo } from "@/components/site/logo";
 import { Button } from "@/components/ui/button";
-import { PanelLeft, PanelLeftClose } from "lucide-react";
+import { Menu } from "lucide-react";
 import { NavigationProgress } from "@/components/dashboard/navigation-progress";
 import { MobileSidebar } from "@/components/dashboard/mobile-sidebar";
 import { SidebarNav } from "@/components/dashboard/sidebar-nav";
@@ -58,56 +58,74 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const sections = DASHBOARD_NAV[user.role] ?? DASHBOARD_NAV.CUSTOMER;
 
   return (
-    <div className="flex min-h-svh flex-col">
-      <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur-md">
-        {/* useSearchParams inside needs a boundary so the shell stays static. */}
-        <Suspense fallback={null}>
-          <NavigationProgress />
-        </Suspense>
-        <div className="flex h-16 items-center gap-2 px-4 sm:px-6">
-          <MobileSidebar sections={sections} />
-          {/* Small screens get the drawer above; this collapses the rail. */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="hidden lg:inline-flex"
-            onClick={toggle}
-            aria-expanded={!collapsed}
-            aria-controls="dashboard-sidebar"
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+    <div className="flex min-h-svh">
+      {/*
+        The sidebar is its own full-height column rather than something living
+        under the header: the brand sits at its top, and the header starts to
+        the right of it. Collapsed, the column narrows to the icon rail.
+      */}
+      <aside
+        id="dashboard-sidebar"
+        className={cn(
+          "hidden shrink-0 border-r bg-background transition-[width] duration-200 ease-out lg:block",
+          collapsed ? "w-[4.25rem]" : "w-64",
+        )}
+      >
+        <div className="sticky top-0 flex h-svh flex-col">
+          <div
+            className={cn(
+              "flex h-16 shrink-0 items-center border-b",
+              collapsed ? "justify-center px-2" : "px-4",
+            )}
           >
-            {collapsed ? <PanelLeft /> : <PanelLeftClose />}
-          </Button>
-          <Logo className="hidden sm:inline-flex" />
-          <Badge variant="secondary" className="ml-1 hidden md:inline-flex">
-            {ROLE_LABEL[user.role]}
-          </Badge>
-
-          <div className="ml-auto">
-            <UserMenu
-              name={user.name ?? "Account"}
-              email={user.email ?? ""}
-              image={user.image}
-              role={user.role}
-            />
+            <Logo compact={collapsed} />
           </div>
-        </div>
-      </header>
-
-      <div className="flex flex-1">
-        <aside
-          id="dashboard-sidebar"
-          className={cn(
-            "hidden shrink-0 border-r transition-[width] duration-200 ease-out lg:block",
-            collapsed ? "w-[4.25rem]" : "w-64",
-          )}
-        >
-          <div className="sticky top-16 max-h-[calc(100svh-4rem)] overflow-x-hidden overflow-y-auto p-3">
+          <div className="flex-1 overflow-x-hidden overflow-y-auto p-3">
             <SidebarNav sections={sections} collapsed={collapsed} />
           </div>
-        </aside>
+        </div>
+      </aside>
 
-        <main id="main" className="min-w-0 flex-1 bg-secondary/25">
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur-md">
+          {/* useSearchParams inside needs a boundary so the shell stays static. */}
+          <Suspense fallback={null}>
+            <NavigationProgress />
+          </Suspense>
+          <div className="flex h-16 items-center gap-2 px-4 sm:px-6">
+            {/* Below lg this opens the drawer; from lg it collapses the rail.
+                Same hamburger either way, so the control reads as one thing. */}
+            <MobileSidebar sections={sections} />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hidden lg:inline-flex"
+              onClick={toggle}
+              aria-expanded={!collapsed}
+              aria-controls="dashboard-sidebar"
+              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              <Menu />
+            </Button>
+
+            {/* The brand lives in the sidebar once there is one. */}
+            <Logo className="hidden sm:inline-flex lg:hidden" />
+            <Badge variant="secondary" className="ml-1 hidden md:inline-flex">
+              {ROLE_LABEL[user.role]}
+            </Badge>
+
+            <div className="ml-auto">
+              <UserMenu
+                name={user.name ?? "Account"}
+                email={user.email ?? ""}
+                image={user.image}
+                role={user.role}
+              />
+            </div>
+          </div>
+        </header>
+
+        <main id="main" className="flex-1 bg-secondary/25">
           <div className="mx-auto w-full max-w-6xl p-4 sm:p-6 lg:p-8">{children}</div>
         </main>
       </div>
@@ -119,30 +137,41 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 function ShellSkeleton() {
   const { collapsed } = useSidebarCollapsed();
   return (
-    <div className="flex min-h-svh flex-col">
-      <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur-md">
-        <div className="flex h-16 items-center gap-2 px-4 sm:px-6">
-          <Skeleton className="size-8 rounded-md lg:hidden" />
-          <Skeleton className="hidden h-6 w-32 sm:block" />
-          <div className="ml-auto">
-            <Skeleton className="h-9 w-24 rounded-md" />
+    <div className="flex min-h-svh">
+      <aside
+        className={cn(
+          "hidden shrink-0 border-r lg:block",
+          collapsed ? "w-[4.25rem]" : "w-64",
+        )}
+      >
+        <div className="sticky top-0 flex h-svh flex-col">
+          <div
+            className={cn(
+              "flex h-16 shrink-0 items-center border-b",
+              collapsed ? "justify-center px-2" : "px-4",
+            )}
+          >
+            <Skeleton className={collapsed ? "size-8 rounded-lg" : "h-8 w-40"} />
           </div>
-        </div>
-      </header>
-      <div className="flex flex-1">
-        <aside
-          className={cn(
-            "hidden shrink-0 border-r lg:block",
-            collapsed ? "w-[4.25rem]" : "w-64",
-          )}
-        >
           <div className="space-y-2 p-3">
             {Array.from({ length: 6 }, (_, i) => (
               <Skeleton key={i} className="h-9 w-full rounded-lg" />
             ))}
           </div>
-        </aside>
-        <main className="min-w-0 flex-1 bg-secondary/25">
+        </div>
+      </aside>
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur-md">
+          <div className="flex h-16 items-center gap-2 px-4 sm:px-6">
+            <Skeleton className="size-8 rounded-md" />
+            <Skeleton className="hidden h-6 w-32 sm:block lg:hidden" />
+            <div className="ml-auto">
+              <Skeleton className="h-9 w-24 rounded-md" />
+            </div>
+          </div>
+        </header>
+        <main className="flex-1 bg-secondary/25">
           <div className="mx-auto w-full max-w-6xl p-4 sm:p-6 lg:p-8">
             <Skeleton className="h-8 w-52" />
             <Skeleton className="mt-2 h-4 w-72" />

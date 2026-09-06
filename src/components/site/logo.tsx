@@ -4,9 +4,12 @@ import { cn } from "@/lib/utils";
 export function Logo({
   className,
   onDark = false,
+  compact = false,
 }: {
   className?: string;
   onDark?: boolean;
+  /** Mark only, for the collapsed sidebar rail. */
+  compact?: boolean;
 }) {
   return (
     <Link
@@ -38,7 +41,7 @@ export function Logo({
           />
         </svg>
       </span>
-      <span className="flex flex-col leading-none">
+      <span className={cn("flex-col leading-none", compact ? "hidden" : "flex")}>
         <span
           className={cn(
             "text-[15px] font-semibold tracking-tight",
