@@ -4,14 +4,22 @@ Every panel, every page, every CRUD operation.
 
 ## Conventions
 
-All dashboard endpoints live under one namespace and one dispatcher
-([src/app/api/dashboard/[...segments]/route.ts](../src/app/api/dashboard/%5B...segments%5D/route.ts)):
+Every endpoint is its own named folder under
+[src/app/api/dashboard/](../src/app/api/dashboard/), so a path here maps
+directly to a file: `POST /api/dashboard/coupons/{id}/toggle` lives at
+`coupons/[id]/toggle/route.ts`. Each file declares only which verbs it answers —
+the shared permission and dispatch logic sits in
+[src/lib/api/factory.ts](../src/lib/api/factory.ts), with the read and write
+registries ([dashboard.ts](../src/lib/api/dashboard.ts),
+[mutations.ts](../src/lib/api/mutations.ts)) as the single source of who may
+call what.
 
 | Shape | Meaning |
 | --- | --- |
 | `GET /api/dashboard/{resource}` | list |
 | `GET /api/dashboard/{resource}/detail/{id}` | one record, detail shape |
 | `GET /api/dashboard/{resource}/form/{id}` | one record, edit-form shape (plus the dropdown data that form needs) |
+| `GET /api/dashboard/{resource}/form` | just that dropdown data, for a blank "new" form |
 | `POST /api/dashboard/{resource}` | create |
 | `PATCH /api/dashboard/{resource}/{id}` | update |
 | `DELETE /api/dashboard/{resource}/{id}` | delete |
@@ -41,8 +49,7 @@ actions expect: arrays become repeated fields, objects are JSON-stringified.
 | `201`/`200` | created |
 | `401` | not signed in |
 | `403` | role not permitted, or vendor account still pending approval |
-| `404` | unknown resource or verb |
-| `405` | resource has no such operation (e.g. `DELETE` on `wishlist`) |
+| `404` | unknown resource or verb, or an operation the resource doesn't have (there is no `DELETE` on `wishlist`, so no such route exists) |
 | `422` | validation failure |
 
 ---
@@ -83,6 +90,7 @@ There is no `POST` create — vendors self-register through the storefront.
 | --- | --- | --- |
 | `GET` | `/api/dashboard/properties` | list (admin sees all vendors') |
 | `GET` | `/api/dashboard/properties/form/{id}` | edit form + types/districts/amenities |
+| `GET` | `/api/dashboard/properties/form` | dropdown data for a blank create form |
 | `POST` | `/api/dashboard/properties` | create |
 | `PATCH` | `/api/dashboard/properties/{id}` | update |
 | `DELETE` | `/api/dashboard/properties/{id}` | delete |
@@ -319,6 +327,7 @@ overview and settings.
 | --- | --- | --- |
 | `GET` | `/api/dashboard/properties` | own properties only |
 | `GET` | `/api/dashboard/properties/form/{id}` | edit form + reference data |
+| `GET` | `/api/dashboard/properties/form` | dropdown data for a blank create form |
 | `POST` | `/api/dashboard/properties` | create (submitted for admin approval) |
 | `PATCH` | `/api/dashboard/properties/{id}` | update own |
 | `DELETE` | `/api/dashboard/properties/{id}` | delete own |
@@ -332,6 +341,7 @@ Same body as the admin table above, minus `vendorId` (taken from the session).
 | --- | --- | --- |
 | `GET` | `/api/dashboard/rooms` | rooms across own properties |
 | `GET` | `/api/dashboard/rooms/form/{id}` | edit form + amenities |
+| `GET` | `/api/dashboard/rooms/form` | dropdown data for a blank create form |
 | `POST` | `/api/dashboard/rooms` | create |
 | `PATCH` | `/api/dashboard/rooms/{id}` | update |
 | `DELETE` | `/api/dashboard/rooms/{id}` | delete |
