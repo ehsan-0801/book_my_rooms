@@ -92,6 +92,16 @@ export const MUTATIONS: Record<string, MutationResource> = {
     },
   },
 
+  users: {
+    create: { roles: ADMIN, action: user.createUser },
+    update: { roles: ADMIN, action: user.updateUser },
+    remove: { roles: ADMIN, action: user.deleteUser },
+    verbs: {
+      active: { roles: ADMIN, action: user.setUserActive },
+      password: { roles: ADMIN, action: user.resetUserPassword },
+    },
+  },
+
   customers: {
     update: { roles: ADMIN, action: user.updateCustomer },
     remove: { roles: ADMIN, action: user.deleteUser },

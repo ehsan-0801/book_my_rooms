@@ -139,6 +139,41 @@ checkout, and cancelling is a status transition so the financial record survives
 // active: { "active": true }
 ```
 
+## Users — `/dashboard/users`, `/new`, `/[id]`, `/[id]/edit`
+
+Every account on the platform, whatever its role. Customers and Vendors each
+show one slice; this is the whole list, and the only place admin accounts can
+be managed.
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/dashboard/users` | list; `?role=ADMIN\|VENDOR\|CUSTOMER` and `?q=` search name/email/phone |
+| `GET` | `/api/dashboard/users/detail/{id}` | one account, its vendor profile and activity counts |
+| `POST` | `/api/dashboard/users` | create |
+| `PATCH` | `/api/dashboard/users/{id}` | update name, contact, role, active |
+| `DELETE` | `/api/dashboard/users/{id}` | delete |
+| `POST` | `/api/dashboard/users/{id}/active` | activate / deactivate |
+| `POST` | `/api/dashboard/users/{id}/password` | set a new password |
+
+```jsonc
+// create — password required; businessName required only when role is VENDOR
+{ "name": "", "email": "", "phone": "01XXXXXXXXX", "role": "ADMIN" | "VENDOR" | "CUSTOMER",
+  "isActive": true, "password": "", "businessName": "" }
+// update — same minus password/businessName
+// active:   { "active": true }
+// password: { "newPassword": "", "confirmPassword": "" }
+```
+
+Guarded so the platform can't be locked out or lose records silently:
+
+- the last active admin can't be deleted, deactivated or demoted
+- you can't delete or deactivate your own account
+- an account with bookings can't be deleted — deactivate it instead
+- a vendor still holding properties can't be deleted, since the vendor row
+  cascades from the user and would take the business with it
+- moving an existing account to VENDOR is refused unless it already has a
+  vendor profile, because a vendor is a business that needs details and approval
+
 ## Payments — `/dashboard/payments`
 
 | Method | Path | Purpose |
@@ -504,6 +539,7 @@ Registration is a server action on `/register` (customer or vendor).
 | availability | — | ✓ | ✓ | — | set, bulk-close |
 | vendors | — | ✓ | ✓ | ✓ | status, commission |
 | customers | — | ✓ | ✓ | ✓ | active |
+| users | ✓ | ✓ | ✓ | ✓ | active, password |
 | bookings | — | ✓ | — | — | status, cancel |
 | coupons | ✓ | ✓ | ✓ | ✓ | toggle |
 | banners | ✓ | ✓ | ✓ | ✓ | toggle |

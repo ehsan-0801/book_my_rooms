@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { AlertTriangle, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -37,6 +38,7 @@ export function DeleteDialog({
   triggerLabel = "Delete",
   triggerVariant = "ghost",
   iconOnly = false,
+  redirectTo,
 }: {
   action: (
     prev: ActionResult | undefined,
@@ -49,7 +51,10 @@ export function DeleteDialog({
   triggerLabel?: string;
   triggerVariant?: "ghost" | "outline" | "destructive";
   iconOnly?: boolean;
+  /** Where to go once the record is gone — for pages showing that one record. */
+  redirectTo?: string;
 }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [typed, setTyped] = useState("");
   const [pending, startTransition] = useTransition();
@@ -69,6 +74,9 @@ export function DeleteDialog({
           toast.success(result.message);
           setOpen(false);
           setTyped("");
+          // Deleting from a detail page would otherwise leave the viewer on a
+          // record that no longer exists.
+          if (redirectTo) router.push(redirectTo);
         } else if (result.status === "warning") {
           // A refusal the user can act on — keep the dialog open so the
           // explanation stays next to the thing they were deleting.

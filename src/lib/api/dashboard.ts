@@ -308,6 +308,61 @@ export const RESOURCES = {
   },
 
   /* ------------------------------------------------------------ customers */
+  "users/detail": {
+    roles: ["ADMIN"],
+    load: async ({ id }) =>
+      prisma.user.findUniqueOrThrow({
+        where: { id: id! },
+        select: {
+          id: true, name: true, email: true, phone: true, avatarUrl: true,
+          role: true, isActive: true, emailVerified: true, createdAt: true,
+          updatedAt: true,
+          vendor: { select: { id: true, businessName: true, status: true } },
+          _count: { select: { bookings: true, reviews: true, wishlist: true } },
+        },
+      }),
+  },
+
+  users: {
+    roles: ["ADMIN"],
+    // Everyone with an account, whatever their role — the Customers and
+    // Vendors pages each show one slice; this is the whole list.
+    load: async ({ searchParams }) => {
+      const role = searchParams?.get("role");
+      const query = searchParams?.get("q")?.trim();
+
+      const users = await prisma.user.findMany({
+        where: {
+          ...(role === "ADMIN" || role === "VENDOR" || role === "CUSTOMER"
+            ? { role }
+            : {}),
+          ...(query
+            ? {
+                OR: [
+                  { name: { contains: query, mode: "insensitive" as const } },
+                  { email: { contains: query, mode: "insensitive" as const } },
+                  { phone: { contains: query } },
+                ],
+              }
+            : {}),
+        },
+        orderBy: [{ role: "asc" }, { createdAt: "desc" }],
+        select: {
+          id: true, name: true, email: true, phone: true, avatarUrl: true,
+          role: true, isActive: true, createdAt: true,
+          vendor: { select: { businessName: true, status: true } },
+          _count: { select: { bookings: true, reviews: true } },
+        },
+      });
+
+      const counts = await prisma.user.groupBy({ by: ["role"], _count: true });
+      return {
+        users,
+        counts: Object.fromEntries(counts.map((c) => [c.role, c._count])) as Record<string, number>,
+      };
+    },
+  },
+
   customers: {
     roles: ["ADMIN"],
     load: async () => {

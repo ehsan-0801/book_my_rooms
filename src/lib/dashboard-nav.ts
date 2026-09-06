@@ -22,6 +22,7 @@ export const DASHBOARD_NAV: Record<"ADMIN" | "VENDOR" | "CUSTOMER", NavSection[]
         { href: "/dashboard/properties", label: "Properties", icon: "Building2" },
         { href: "/dashboard/bookings", label: "Bookings", icon: "CalendarCheck" },
         { href: "/dashboard/customers", label: "Customers", icon: "Users" },
+        { href: "/dashboard/users", label: "Users", icon: "UserCog" },
       ],
     },
     {
